@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "471449997339",
+    "project_id": "tst-reservation",
+    "storage_bucket": "tst-reservation.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471449997339:android:96b18b3c290a71ebcea8be",
+        "android_client_info": {
+          "package_name": "link.ignotus.example.reservation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "471449997339-pduhed3d5v7ld3apejrljcepdnn3d59f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAN7-yJR50Rmfm4ElEnI-wjiFZHSOKYi4M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "471449997339-pduhed3d5v7ld3apejrljcepdnn3d59f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "471449997339-p9sv0o6p9lhk6qkg6q1r368vbvg2tddv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "link.ignotus.example.reservation"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
