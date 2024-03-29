@@ -263,6 +263,7 @@ class _HomePageState extends State<HomePage>
 
   Widget menuOlustur(BuildContext context) {
     var drawList = context.read<HomeViewModel>().drawModel(context);
+    var loggedInUser = Provider.of<ProfileViewModel>(context).loggedInUser;
     return SlideTransition(
       position: menuOffsetAnimation,
       child: ScaleTransition(
@@ -277,9 +278,12 @@ class _HomePageState extends State<HomePage>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     CircleAvatar(
-                      radius: 23,
                       backgroundColor: AppColors.white,
-                      child: PngImage(name: ImageItems().admin),
+                      radius: 60,
+                      child: CloudImage(
+                        name: loggedInUser.profileUrl,
+                        type: 'profile-pic',
+                      ),
                     ),
                     SizedBox(
                       width: context.dynamicWidth(0.03),

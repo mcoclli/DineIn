@@ -110,6 +110,7 @@ mixin Validation<T extends StatefulWidget> on State<T> {
       await _auth.signOut().then(
             (value) => {
               Fluttertoast.showToast(msg: "Logout successful..."),
+              CommonUtils.log("context is $context"),
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (context) => const LoginPage(),

@@ -45,7 +45,7 @@ extension PaddingExtensionAll on BuildContext {
   EdgeInsets get pagePaddingAll =>
       const EdgeInsets.only(top: 20, bottom: 20, left: 10, right: 10);
   EdgeInsets get topPadding => const EdgeInsets.only(top: 80);
-  EdgeInsets get pageTopPadding => const EdgeInsets.only(top: 20);
+  EdgeInsets get pageTopPadding => const EdgeInsets.only(top: 60);
 }
 
 extension BorderExtension on BuildContext {

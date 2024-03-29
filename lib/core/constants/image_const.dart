@@ -1,6 +1,8 @@
+import 'package:cached_firestorage/lib.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:lottie/lottie.dart';
+import 'package:reservation/core/util/common_utils.dart';
 
 class ImageItems {
   final loginlogoImage = "image";
@@ -40,6 +42,65 @@ class ImageItems {
   static const resto = 'resto';
   static const arsalan = 'arsalan';
   static const knife = 'knife';
+}
+
+class CloudImage extends StatefulWidget {
+  const CloudImage({super.key, required this.name, required this.type});
+  final String? name;
+  final String type;
+
+  @override
+  State<CloudImage> createState() => _CloudImageState();
+}
+
+class _CloudImageState extends State<CloudImage> {
+  Future<String> getDownloadURL(String fileName) async {
+    try {
+      CommonUtils.log("Getting image from $fileName");
+      var instance = CachedFirestorage.instance;
+      return await instance.getDownloadURL(
+        mapKey: fileName,
+        filePath: fileName,
+      );
+    } catch (e) {
+      CommonUtils.log("Error occurred while getting file ${e.toString()}");
+      return "NA";
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.name != null) {
+      return FutureBuilder(
+        future: getDownloadURL(widget.name!),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // while data is loading:
+            return const CircularProgressIndicator.adaptive();
+          } else {
+            // data loaded:
+            final image = snapshot.data;
+            if (image != null && image != "NA") {
+              return Image.network(
+                image,
+                fit: BoxFit.contain,
+              );
+            } else {
+              return Image.asset(
+                'assets/image/defaults/${widget.type}.png',
+                fit: BoxFit.contain,
+              );
+            }
+          }
+        },
+      );
+    }
+    return Image.asset(
+      "assets/image/defaults/profile-pic.png",
+      // 'assets/image/defaults/$type.png',
+      fit: BoxFit.scaleDown,
+    );
+  }
 }
 
 class PngImage extends StatelessWidget {

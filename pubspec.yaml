@@ -7,6 +7,7 @@ environment:
   sdk: '>=3.2.6 <4.0.0'
 
 dependencies:
+  cached_firestorage: ^0.2.0
   carousel_slider: ^4.2.1
   cloud_firestore: ^4.14.0
   contained_tab_bar_view: ^0.8.0
@@ -40,6 +41,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/image/
+    - assets/image/defaults/
     - assets/svgs/
     - assets/icons/bottom_navbar/
     - assets/lotties/

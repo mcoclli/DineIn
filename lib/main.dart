@@ -1,3 +1,4 @@
+import 'package:cached_firestorage/cached_firestorage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +21,7 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   ).then((value) async {
+    CachedFirestorage.instance.cacheTimeout = 30;
     CommonUtils.log("Firebase app initialized $value");
   });
   runApp(const MainApp());

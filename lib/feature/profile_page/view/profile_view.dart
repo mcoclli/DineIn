@@ -4,7 +4,10 @@ import 'package:reservation/core/constants/app_colors.dart';
 import 'package:reservation/core/constants/app_string.dart';
 import 'package:reservation/core/constants/image_const.dart';
 import 'package:reservation/core/extensions/extension.dart';
+import 'package:reservation/feature/login_register_page/model/users_model.dart';
+import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
 import 'package:reservation/feature/profile_page/viewModel/profil_view_model.dart';
+import 'package:reservation/feature/profile_page/viewModel/restaurant_view_model.dart';
 import 'package:reservation/products/component/image_card.dart';
 import 'package:reservation/products/widgets/bottom_navbar.dart';
 
@@ -19,61 +22,48 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    context.read<ProfileViewModel>().firebaseName();
+    context.read<ProfileViewModel>().fetchUserModel();
   }
 
   @override
   Widget build(BuildContext context) {
+    var profileProvider = Provider.of<ProfileViewModel>(context);
+    var loggedInUser = profileProvider.loggedInUser;
+    Provider.of<RestaurantViewModel>(context)
+        .fetchRestaurantModel(profileProvider);
+    var restaurant = context.read<RestaurantViewModel>().currentRestaurant;
     return Scaffold(
       bottomNavigationBar: const BottomNavbar(pageid: 0),
       body: SingleChildScrollView(
           child: Column(
         children: [
-          _stackWidget(context),
-          _adminText(context),
-          _adminFavorite(context),
+          _stackWidget(context, loggedInUser, restaurant),
+          _adminText(context, loggedInUser),
+          _restaurantDetails(context, restaurant),
           _reviews(context),
         ],
       )),
     );
   }
 
-  Padding _adminText(BuildContext context) {
-    var name = Provider.of<ProfileViewModel>(context).loggedInUser.fullName;
+  Padding _adminText(BuildContext context, UserModel loggedInUser) {
     return Padding(
       padding: context.pagePadding,
       child: Center(
         child: SizedBox(
-          height: MediaQuery.of(context).size.height / 8,
+          height: MediaQuery.of(context).size.height * 0.05,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Consumer(
                 builder: ((context, value, child) {
                   return Text(
-                    '$name',
+                    '${loggedInUser.fullName}',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         color: AppColors.blueMetallic,
                         fontWeight: FontWeight.bold),
                   );
                 }),
-              ),
-              Text(
-                StringConstant.united,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.silverlined, fontWeight: FontWeight.bold),
-              ),
-              Container(
-                height: context.dynamicHeight(0.03),
-                width: context.dynamicWidth(0.3),
-                decoration: context.smallDecoraiton,
-                child: Center(
-                    child: Text(
-                  StringConstant.edit,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.blueMetallic,
-                      fontWeight: FontWeight.bold),
-                )),
               ),
             ],
           ),
@@ -153,7 +143,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Padding _adminFavorite(BuildContext context) {
+  Padding _restaurantDetails(
+      BuildContext context, RestaurantModel? restaurant) {
     var imgList = context.read<ProfileViewModel>().imgModel;
 
     return Padding(
@@ -162,56 +153,47 @@ class _ProfilePageState extends State<ProfilePage> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            StringConstant.admin,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.blueMetallic, fontWeight: FontWeight.bold),
+          Center(
+            child: Text(
+              "${restaurant?.name}",
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppColors.blueMetallic, fontWeight: FontWeight.bold),
+            ),
           ),
           SizedBox(
             height: context.dynamicHeight(0.4),
-            child: Consumer(builder: ((context, value, child) {
-              return GridView.builder(
-                itemCount: imgList.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3),
-                itemBuilder: (BuildContext context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: ImageCard(
-                      model: imgList[index],
-                    ),
-                  );
-                },
-              );
-            })),
+            child: Consumer(
+              builder: (context, value, child) {
+                return GridView.builder(
+                  itemCount: imgList.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3),
+                  itemBuilder: (BuildContext context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: ImageCard(
+                        model: imgList[index],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Stack _stackWidget(BuildContext context) {
+  Stack _stackWidget(BuildContext context, UserModel loggedInUser,
+      RestaurantModel? restaurant) {
     return Stack(
       children: [
-        const PngImage(name: ImageItems.stackImage),
         Padding(
           padding: context.pageTopPadding,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: AppColors.white,
-                    size: 20,
-                  )),
-              Text(
-                StringConstant.back,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.white, fontWeight: FontWeight.bold),
-              ),
-            ],
+          child: CloudImage(
+            name: restaurant?.baseImageUrl,
+            type: 'restaurant-banner',
           ),
         ),
         Padding(
@@ -225,12 +207,16 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.black38,
                       blurRadius: 10)
                 ]),
-            child: const CircleAvatar(
-                backgroundColor: AppColors.white,
-                radius: 60,
-                child: PngImage(
-                  name: ImageItems.profileImage,
-                )),
+            child: CircleAvatar(
+              backgroundColor: Colors.transparent,
+              radius: 60,
+              child: ClipOval(
+                child: CloudImage(
+                  name: loggedInUser.profileUrl,
+                  type: 'profile-pic',
+                ),
+              ),
+            ),
           ),
         ),
       ],

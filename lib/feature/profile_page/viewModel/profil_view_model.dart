@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reservation/core/util/common_utils.dart';
 import 'package:reservation/feature/profile_page/model/image_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,21 +10,41 @@ class ProfileViewModel extends ChangeNotifier {
   List<ImageModel> get imgModel => _items;
 
   User? user = FirebaseAuth.instance.currentUser;
-  UserModel loggedInUser = UserModel();
+  UserModel _loggedInUser = UserModel();
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  UserModel get loggedInUser => _loggedInUser;
 
   profileToList(ImageModel imgModel) {
     _items.contains(imgModel);
     notifyListeners();
   }
 
-  firebaseName() {
-    FirebaseFirestore.instance
+  resetUser() {
+    CommonUtils.log("Resetting the user");
+    _loggedInUser = UserModel();
+  }
+
+  fetchUserModel() async {
+    if (_loggedInUser.restaurantRef != null) {
+      CommonUtils.log(
+          "The user is already loaded and returning the old value $_loggedInUser");
+      return;
+    }
+    await _db
         .collection("users")
-        .doc(user!.uid)
+        .where("uid", isEqualTo: user!.uid)
+        .limit(1)
+        .withConverter<UserModel>(
+            fromFirestore: UserModel.fromFirestore,
+            toFirestore: (UserModel userModel, options) =>
+                userModel.toFirestore())
         .get()
-        .then((value) {
-      loggedInUser = UserModel.fromMap(value.data());
-      notifyListeners();
-    });
+        .then(
+      (querySnapshot) {
+        _loggedInUser = querySnapshot.docs.first.data();
+        notifyListeners();
+      },
+    );
   }
 }

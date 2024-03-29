@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reservation/core/constants/app_colors.dart';
-import 'package:reservation/core/util/common_utils.dart';
 import 'package:reservation/feature/login_register_page/viewModel/login_view_model.dart';
 
 class AuthTextField extends StatefulWidget {
