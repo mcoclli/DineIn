@@ -27,6 +27,8 @@ Future<void> main() async {
   runApp(const MainApp());
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -37,20 +39,22 @@ class MainApp extends StatelessWidget {
     return MultiProvider(
       providers: MultiProviderInit().providers,
       child: MaterialApp(
-          title: StringConstant.main,
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            primarySwatch: Colors.orange,
-          ),
-          initialRoute: '/',
-          routes: {
-            "/": (context) => const SplashPage(),
-            "/profilePage": (context) => const ProfilePage(),
-            "/notificationPage": (context) => const NotificationPage(),
-            "/favoritePage": (context) => const FavoritePage(),
-            "/shopPage": (context) => const ReservationsPage()
-          },
-          onGenerateRoute: onGenerateRoute),
+        title: StringConstant.main,
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.orange,
+        ),
+        initialRoute: '/',
+        routes: {
+          "/": (context) => const SplashPage(),
+          "/profilePage": (context) => const ProfilePage(),
+          "/notificationPage": (context) => const NotificationPage(),
+          "/favoritePage": (context) => const FavoritePage(),
+          "/shopPage": (context) => const ReservationsPage()
+        },
+        onGenerateRoute: onGenerateRoute,
+        navigatorKey: navigatorKey,
+      ),
     );
   }
 }

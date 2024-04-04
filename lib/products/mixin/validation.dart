@@ -5,6 +5,7 @@ import 'package:reservation/core/constants/app_string.dart';
 import 'package:reservation/core/util/common_utils.dart';
 import 'package:reservation/feature/login_register_page/view/login_view.dart';
 import 'package:reservation/feature/profile_page/view/profile_view.dart';
+import 'package:reservation/main.dart';
 import 'package:reservation/products/widgets/text_form_field.dart';
 
 final fullNameEditingController = TextEditingController();
@@ -110,10 +111,11 @@ mixin Validation<T extends StatefulWidget> on State<T> {
       await _auth.signOut().then(
             (value) => {
               Fluttertoast.showToast(msg: "Logout successful..."),
-              CommonUtils.log("context is $context"),
-              Navigator.of(context).pushReplacement(
+              CommonUtils.log(
+                  "context is [${navigatorKey.currentState?.context}]"),
+              navigatorKey.currentState!.pushReplacement(
                 MaterialPageRoute(
-                  builder: (context) => const LoginPage(),
+                  builder: (_) => const LoginPage(),
                 ),
               )
             },

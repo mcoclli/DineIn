@@ -1,8 +1,17 @@
+import 'dart:io';
+
 import 'package:cached_firestorage/lib.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:reservation/core/util/common_utils.dart';
+import 'package:path/path.dart' as path;
 
 class ImageItems {
   final loginlogoImage = "image";
@@ -45,61 +54,130 @@ class ImageItems {
 }
 
 class CloudImage extends StatefulWidget {
-  const CloudImage({super.key, required this.name, required this.type});
+  const CloudImage(
+      {super.key,
+      required this.name,
+      required this.type,
+      this.isUploadAllowed = false,
+      this.refreshFunction});
   final String? name;
   final String type;
+  final bool isUploadAllowed;
+  final void Function()? refreshFunction;
 
   @override
   State<CloudImage> createState() => _CloudImageState();
 }
 
 class _CloudImageState extends State<CloudImage> {
-  Future<String> getDownloadURL(String fileName) async {
+  final _instance = CachedFirestorage.instance;
+  final ImagePicker _picker = ImagePicker();
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  Future<String> getDownloadURL(String fileName) {
     try {
       CommonUtils.log("Getting image from $fileName");
-      var instance = CachedFirestorage.instance;
-      return await instance.getDownloadURL(
+      return _instance.getDownloadURL(
         mapKey: fileName,
         filePath: fileName,
       );
     } catch (e) {
       CommonUtils.log("Error occurred while getting file ${e.toString()}");
-      return "NA";
+      return Future.value("NA");
     }
+  }
+
+  Future<XFile> _compressImage(File file) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath = path.join(tempDir.path, path.basename(file.path));
+
+    final compressedFile = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: 75, // Adjust compression quality
+      minWidth: 1920, // Target width
+      minHeight: 1080, // Target height
+    );
+
+    return compressedFile!;
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.name != null) {
-      return FutureBuilder(
-        future: getDownloadURL(widget.name!),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // while data is loading:
-            return const CircularProgressIndicator.adaptive();
+      return GestureDetector(
+        onTap: () async {
+          if (widget.isUploadAllowed) {
+            await _executeUpload();
           } else {
-            // data loaded:
-            final image = snapshot.data;
-            if (image != null && image != "NA") {
-              return Image.network(
-                image,
-                fit: BoxFit.contain,
-              );
-            } else {
-              return Image.asset(
-                'assets/image/defaults/${widget.type}.png',
-                fit: BoxFit.contain,
-              );
-            }
+            CommonUtils.log("Ignoring tap as this is not updatable");
           }
         },
+        child: FutureBuilder(
+          future: getDownloadURL(widget.name!),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // while data is loading:
+              return const CircularProgressIndicator.adaptive();
+            } else {
+              // data loaded:
+              final image = snapshot.data;
+              if (image != null && image != "NA") {
+                CommonUtils.log("Image url loaded : [$image] ");
+                return CachedNetworkImage(
+                  imageUrl: image,
+                  cacheKey: widget.name,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      CircularProgressIndicator(
+                          value: downloadProgress.progress),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                );
+              } else {
+                return Image.asset(
+                  'assets/image/defaults/${widget.type}.png',
+                  fit: BoxFit.contain,
+                );
+              }
+            }
+          },
+        ),
       );
     }
     return Image.asset(
-      "assets/image/defaults/profile-pic.png",
-      // 'assets/image/defaults/$type.png',
+      'assets/image/defaults/${widget.type}.png',
       fit: BoxFit.scaleDown,
     );
+  }
+
+  Future<void> _executeUpload() async {
+    CommonUtils.log("uploading image");
+    // Let user select photo from gallery
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery, // or ImageSource.camera for camera
+      imageQuality: 50, // Adjust image quality
+    );
+
+    if (image != null) {
+      // Compress image
+      final XFile compressedImage = await _compressImage(File(image.path));
+
+      // Upload compressed image
+      await _storage
+          .ref(widget.name)
+          .putFile(File(compressedImage.path))
+          .then((p0) async {
+        CommonUtils.log("uploading done...$p0");
+        CommonUtils.log("Removing ${widget.name} from cache");
+        imageCache.clear();
+        imageCache.clearLiveImages();
+        await DefaultCacheManager().removeFile(widget.name!).then((value) {
+          _instance.removeCacheEntry(mapKey: widget.name!);
+          if (widget.refreshFunction != null) {
+            widget.refreshFunction!();
+          }
+        });
+      });
+    }
   }
 }
 

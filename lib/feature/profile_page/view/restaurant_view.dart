@@ -1,0 +1,265 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:reservation/core/constants/app_colors.dart';
+import 'package:reservation/core/extensions/extension.dart';
+import 'package:reservation/core/util/common_utils.dart';
+import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
+import 'package:reservation/feature/profile_page/viewModel/profil_view_model.dart';
+import 'package:reservation/feature/profile_page/viewModel/restaurant_view_model.dart';
+import 'package:reservation/products/component/menu_item_card.dart';
+
+class RestaurantView extends StatefulWidget {
+  const RestaurantView({super.key});
+
+  @override
+  State<RestaurantView> createState() => _RestaurantViewState();
+}
+
+class _RestaurantViewState extends State<RestaurantView> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _cuisineController = TextEditingController();
+  final TextEditingController _meanCostController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final profileState = Provider.of<ProfileViewModel>(context, listen: false);
+    profileState.fetchUserModel().then((_) {
+      CommonUtils.log("User data fetched, getting restaurant");
+      // After fetching the user, fetch the restaurant
+      Provider.of<RestaurantViewModel>(context, listen: false)
+          .fetchRestaurantModel(profileState.loggedInUser.restaurantRef!);
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _cuisineController.dispose();
+    _meanCostController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var profileProvider = Provider.of<ProfileViewModel>(context, listen: false);
+    final restaurantState = Provider.of<RestaurantViewModel>(context);
+    // Ensure the restaurant is fetched after the user is loaded
+    if (profileProvider.loggedInUser.restaurantRef != null &&
+        restaurantState.currentRestaurant == null) {
+      restaurantState
+          .fetchRestaurantModel(profileProvider.loggedInUser.restaurantRef!);
+    }
+    var restaurant = restaurantState.currentRestaurant;
+    _nameController.text = restaurant?.name ?? '';
+    _cuisineController.text = restaurant?.cuisine ?? '';
+    _meanCostController.text = restaurant?.meanCost ?? '';
+    _addressController.text = restaurant?.address ?? '';
+    if (restaurant != null) {
+      return Padding(
+        padding: context.pagePadding,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _isEditing
+                ? Center(
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        _executeDataUpdate(restaurant, restaurantState);
+                      },
+                      child: const Icon(Icons.save),
+                    ),
+                  )
+                : Container(),
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isEditing = true;
+                  });
+                },
+                child: _isEditing
+                    ? TextFormField(
+                        controller: _nameController,
+                        autofocus: true,
+                      )
+                    : Text(
+                        "${restaurant.name}",
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(
+                                color: AppColors.blueMetallic,
+                                fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ),
+            Row(
+              children: [
+                const Icon(Icons.local_atm),
+                SizedBox(
+                  width: context.dynamicWidth(0.03),
+                ),
+                SizedBox(
+                  width: context.dynamicWidth(0.8),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isEditing = true;
+                      });
+                    },
+                    child: _isEditing
+                        ? TextFormField(
+                            controller: _meanCostController,
+                            autofocus: true,
+                          )
+                        : Text(
+                            "${restaurant.meanCost}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: AppColors.silverlined,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                  ),
+                ),
+                SizedBox(
+                  width: context.dynamicWidth(0.03),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Icon(Icons.restaurant),
+                SizedBox(
+                  width: context.dynamicWidth(0.03),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isEditing = true;
+                    });
+                  },
+                  child: SizedBox(
+                    height: 25,
+                    width: context.dynamicWidth(0.8),
+                    child: _isEditing
+                        ? TextFormField(
+                            controller: _cuisineController,
+                            autofocus: true,
+                          )
+                        : Text(
+                            "${restaurant.cuisine}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: AppColors.silverlined,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Icon(Icons.location_on_outlined),
+                SizedBox(
+                  width: context.dynamicWidth(0.03),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isEditing = true;
+                    });
+                  },
+                  child: SizedBox(
+                    height: 25,
+                    width: context.dynamicWidth(0.8),
+                    child: _isEditing
+                        ? TextFormField(
+                            controller: _addressController,
+                            autofocus: true,
+                          )
+                        : Text(
+                            "${restaurant.address}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: AppColors.silverlined,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: context.paddingNormalVertical,
+                  child: Text(
+                    "Menu",
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.black,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                ...(restaurant.menuItems ?? []).map((item) {
+                  return Padding(
+                    padding: context.pagePaddingBottom,
+                    child: MenuItemCard(
+                      name: item.name ?? "name",
+                      description: item.description ?? "",
+                      imageUrl: item.imageUrl,
+                      price: item.price ?? 0.0,
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else {
+      return const CircularProgressIndicator.adaptive();
+    }
+  }
+
+  void _executeDataUpdate(
+      RestaurantModel restaurant, RestaurantViewModel restaurantState) {
+    final displayName = _nameController.text.trim();
+    final cuisine = _cuisineController.text.trim();
+    final meanCost = _meanCostController.text.trim();
+    final address = _addressController.text.trim();
+    if (displayName.isNotEmpty) {
+      restaurant.name = displayName;
+    }
+    if (cuisine.isNotEmpty) {
+      restaurant.cuisine = cuisine;
+    }
+    if (meanCost.isNotEmpty) {
+      restaurant.meanCost = meanCost;
+    }
+    if (address.isNotEmpty) {
+      restaurant.address = address;
+    }
+    restaurantState.updateRestaurant(restaurant);
+    setState(() {
+      _isEditing = false;
+    });
+  }
+}

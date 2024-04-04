@@ -25,12 +25,16 @@ class ProfileViewModel extends ChangeNotifier {
     _loggedInUser = UserModel();
   }
 
-  fetchUserModel() async {
-    if (_loggedInUser.restaurantRef != null) {
+  fetchUserModel({bool forced = false}) async {
+    if (!forced && _loggedInUser.restaurantRef != null) {
       CommonUtils.log(
           "The user is already loaded and returning the old value $_loggedInUser");
       return;
     }
+    _db.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
     await _db
         .collection("users")
         .where("uid", isEqualTo: user!.uid)
@@ -46,5 +50,20 @@ class ProfileViewModel extends ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  Future<void> updateUserProfile(UserModel updatedUser) async {
+    _db.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+    await _db
+        .collection("users")
+        .doc(_loggedInUser.id)
+        .update(updatedUser.toMap())
+        .then((value) async {
+      CommonUtils.log("User data updated..");
+      await fetchUserModel(forced: true);
+    });
   }
 }

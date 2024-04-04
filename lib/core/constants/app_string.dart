@@ -101,7 +101,7 @@ class StringConstant {
   static const chinese = "Chinese";
   static const shortbread =
       "Shortbread, chocolate turtle cookies, and red velvet.";
-  static const price = "\$\$";
+  static const price = "Price";
   static const rating = 'Overall rating';
   static const ratingNum = '4.3';
   static const dl = "EG";

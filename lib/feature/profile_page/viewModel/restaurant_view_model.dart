@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:reservation/core/util/common_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
-import 'package:reservation/feature/profile_page/viewModel/profil_view_model.dart';
 
 class RestaurantViewModel extends ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -10,20 +9,21 @@ class RestaurantViewModel extends ChangeNotifier {
 
   RestaurantModel? get currentRestaurant => _currentRestaurent;
 
-  fetchRestaurantModel(ProfileViewModel profileProvider) async {
-    var user = profileProvider.loggedInUser;
-    if (user.restaurantRef != null) {
-      _doFetchRestaurant(user.restaurantRef!);
-    }
+  fetchRestaurantModel(String restaurantRef, {bool forced = false}) async {
+    _doFetchRestaurant(restaurantRef, forced: forced);
   }
 
-  _doFetchRestaurant(String restaurantRef) async {
-    if (_currentRestaurent != null) {
+  _doFetchRestaurant(String restaurantRef, {bool forced = false}) async {
+    if (!forced && _currentRestaurent != null) {
       CommonUtils.log(
           "The restaurant is already loaded and returning the old value $_currentRestaurent");
       return;
     }
     CommonUtils.log("Fetching restaurant for $restaurantRef");
+    // _db.settings = const Settings(
+    //   persistenceEnabled: true,
+    //   cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    // );
     await _db
         .collection("restaurants")
         .where("restaurantRef", isEqualTo: restaurantRef)
@@ -43,13 +43,14 @@ class RestaurantViewModel extends ChangeNotifier {
   }
 
   updateRestaurant(RestaurantModel updated) async {
+    CommonUtils.log("Updating restaurant ${updated.toMap()}");
     await _db
-        .collection("restaurant")
-        .doc(updated.id)
+        .collection("restaurants")
+        .doc(_currentRestaurent!.id)
         .update(updated.toMap())
         .then((value) {
       CommonUtils.log("Updating the data");
-      _doFetchRestaurant(updated.restaurantRef!);
+      _doFetchRestaurant(updated.restaurantRef!, forced: true);
     });
   }
 }

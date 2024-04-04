@@ -280,9 +280,12 @@ class _HomePageState extends State<HomePage>
                     CircleAvatar(
                       backgroundColor: AppColors.white,
                       radius: 60,
-                      child: CloudImage(
-                        name: loggedInUser.profileUrl,
-                        type: 'profile-pic',
+                      child: ClipOval(
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        child: CloudImage(
+                          name: loggedInUser.profileUrl,
+                          type: 'profile-pic',
+                        ),
                       ),
                     ),
                     SizedBox(
