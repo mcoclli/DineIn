@@ -10,7 +10,7 @@ class RestaurantModel {
   String? cuisine;
   String? meanCost;
   String? address;
-  List<MenuItemModel>? menuItems;
+  List<MenuItemModel> menuItems = [];
 
   RestaurantModel({
     this.id,
@@ -20,7 +20,7 @@ class RestaurantModel {
     this.cuisine,
     this.meanCost,
     this.address,
-    this.menuItems,
+    required this.menuItems,
   });
 
   factory RestaurantModel.fromMap(map) {
@@ -45,7 +45,7 @@ class RestaurantModel {
       'cuisine': cuisine,
       'meanCost': meanCost,
       'address': address,
-      'menuItems': (menuItems ?? []).map((element) => element.toMap()),
+      'menuItems': menuItems.map((element) => element.toMap()),
     };
   }
 
@@ -76,8 +76,7 @@ class RestaurantModel {
       if (cuisine != null) "cuisine": cuisine,
       if (meanCost != null) "meanCost": meanCost,
       if (address != null) "address": address,
-      if (menuItems != null)
-        "menuItems": (menuItems ?? []).map((e) => e.toMap()).toList(),
+      "menuItems": menuItems.map((e) => e.toMap()).toList(),
     };
   }
 }

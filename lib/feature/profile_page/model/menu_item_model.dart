@@ -1,17 +1,19 @@
+import 'package:uuid/uuid.dart';
+
 class MenuItemModel {
-  String? id;
+  String id ;
   String? name;
   String? description;
   String? imageUrl;
   double? price;
 
   MenuItemModel({
-    this.id,
+    id,
     this.name,
     this.description,
-    this.imageUrl,
+    required this.imageUrl,
     this.price,
-  });
+  }): id = id ?? const Uuid().v4().toString();
 
   factory MenuItemModel.fromMap(map) {
     return MenuItemModel(

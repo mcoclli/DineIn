@@ -1,4 +1,7 @@
+import 'package:cached_firestorage/cached_firestorage.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:reservation/core/constants/app_colors.dart';
 import 'package:reservation/core/extensions/extension.dart';
@@ -6,6 +9,7 @@ import 'package:reservation/core/util/common_utils.dart';
 import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
 import 'package:reservation/feature/profile_page/viewModel/profil_view_model.dart';
 import 'package:reservation/feature/profile_page/viewModel/restaurant_view_model.dart';
+import 'package:reservation/products/component/closable_widget.dart';
 import 'package:reservation/products/component/menu_item_card.dart';
 
 class RestaurantView extends StatefulWidget {
@@ -21,6 +25,7 @@ class _RestaurantViewState extends State<RestaurantView> {
   final TextEditingController _meanCostController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   bool _isEditing = false;
+  bool _isMenuChanged = false;
 
   @override
   void initState() {
@@ -67,11 +72,27 @@ class _RestaurantViewState extends State<RestaurantView> {
           children: [
             _isEditing
                 ? Center(
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        _executeDataUpdate(restaurant, restaurantState);
-                      },
-                      child: const Icon(Icons.save),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FloatingActionButton(
+                          onPressed: () {
+                            _executeDataUpdate(restaurant, restaurantState);
+                          },
+                          child: const Icon(Icons.save),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        FloatingActionButton(
+                          onPressed: () {
+                            setState(() {
+                              _isEditing = false;
+                            });
+                          },
+                          child: const Icon(Icons.undo),
+                        ),
+                      ],
                     ),
                   )
                 : Container(),
@@ -207,12 +228,30 @@ class _RestaurantViewState extends State<RestaurantView> {
               children: <Widget>[
                 Padding(
                   padding: context.paddingNormalVertical,
-                  child: Text(
-                    "Menu",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.black,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Menu",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(width: 20),
+                      _isMenuChanged
+                          ? GestureDetector(
+                              onTap: () {
+                                CommonUtils.log("Saving menu items");
+                                restaurantState.updateRestaurant(
+                                    restaurantState.currentRestaurant!);
+                                setState(() {
+                                  _isMenuChanged = false;
+                                });
+                              },
+                              child: const Icon(Icons.save),
+                            )
+                          : Container(),
+                    ],
                   ),
                 ),
                 const SizedBox(
@@ -221,14 +260,66 @@ class _RestaurantViewState extends State<RestaurantView> {
                 ...(restaurant.menuItems ?? []).map((item) {
                   return Padding(
                     padding: context.pagePaddingBottom,
-                    child: MenuItemCard(
-                      name: item.name ?? "name",
-                      description: item.description ?? "",
-                      imageUrl: item.imageUrl,
-                      price: item.price ?? 0.0,
+                    child: ClosableWidget(
+                      closeFunction: () async {
+                        CommonUtils.log(
+                            "Removing menu item ${item.id} from menu");
+                        restaurantState.removeMenuItem(item.id);
+                        FirebaseStorage.instance
+                            .ref(item.imageUrl!)
+                            .delete()
+                            .then((value) async {
+                              CommonUtils.log("Image was deleted for url ${item.imageUrl}");
+                          await DefaultCacheManager()
+                              .removeFile(item.imageUrl!)
+                              .then((value) {
+                            CachedFirestorage.instance
+                                .removeCacheEntry(mapKey: item.imageUrl!);
+                          });
+                        });
+
+                        setState(() {
+                          _isMenuChanged = true;
+                        });
+                      },
+                      child: MenuItemCard(
+                        itemModel: item,
+                        updateFunction: (itemModel) {
+                          restaurantState.updateMenuItem(itemModel);
+                          setState(() {
+                            _isMenuChanged = true;
+                          });
+                        },
+                        imageRefreshFunction: () {
+                          restaurantState.fetchRestaurantModel(
+                            profileProvider.loggedInUser.restaurantRef!,
+                            forced: true,
+                          );
+                        },
+                      ),
                     ),
                   );
                 }),
+                const SizedBox(
+                  height: 5,
+                ),
+                Center(
+                  child: CircleAvatar(
+                    radius: 20, // Adjust the size of the button
+                    backgroundColor: Colors.blue, // Button color
+                    child: IconButton(
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      onPressed: () {
+                        CommonUtils.log("Adding new menu item");
+                        restaurantState.addEmptyMenuItem();
+                        setState(() {
+                          _isEditing = false;
+                          _isMenuChanged = true;
+                        });
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           ],

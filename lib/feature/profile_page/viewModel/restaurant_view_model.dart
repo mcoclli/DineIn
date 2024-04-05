@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:reservation/core/util/common_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
 import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
+import 'package:uuid/uuid.dart';
 
 class RestaurantViewModel extends ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -40,6 +42,33 @@ class RestaurantViewModel extends ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  addEmptyMenuItem() {
+    var itemId = const Uuid().v4().toString();
+    _currentRestaurent?.menuItems.add(
+      MenuItemModel(
+        id: itemId,
+        imageUrl: "restaurants/${_currentRestaurent!.id}/$itemId.jpeg",
+      ),
+    );
+    notifyListeners();
+  }
+
+  removeMenuItem(String id) {
+    _currentRestaurent?.menuItems.removeWhere((element) => id == element.id);
+    notifyListeners();
+  }
+
+  updateMenuItem(MenuItemModel itemModel) {
+    var itemToUpdate = _currentRestaurent?.menuItems
+        .firstWhere((element) => itemModel.id == element.id);
+    if (itemToUpdate != null) {
+      itemToUpdate.name = itemModel.name;
+      itemToUpdate.description = itemModel.description;
+      itemToUpdate.price = itemModel.price;
+    }
+    notifyListeners();
   }
 
   updateRestaurant(RestaurantModel updated) async {

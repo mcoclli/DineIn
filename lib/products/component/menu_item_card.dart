@@ -3,19 +3,20 @@ import 'package:reservation/core/constants/app_colors.dart';
 import 'package:reservation/core/constants/app_string.dart';
 import 'package:reservation/core/constants/image_const.dart';
 import 'package:reservation/core/extensions/extension.dart';
+import 'package:reservation/core/util/common_utils.dart';
+import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
 
 class MenuItemCard extends StatefulWidget {
   const MenuItemCard({
     super.key,
-    required this.name,
-    required this.description,
-    this.imageUrl,
-    required this.price,
+    required this.itemModel,
+    this.updateFunction,
+    this.imageRefreshFunction,
   });
 
-  final String name, description;
-  final String? imageUrl;
-  final double price;
+  final MenuItemModel itemModel;
+  final void Function(MenuItemModel itemModel)? updateFunction;
+  final void Function()? imageRefreshFunction;
 
   @override
   State<MenuItemCard> createState() => _MenuItemCardState();
@@ -37,22 +38,76 @@ class _MenuItemCardState extends State<MenuItemCard> {
 
   @override
   Widget build(BuildContext context) {
-    _nameController.text = widget.name;
-    _descriptionController.text = widget.description;
-    _priceController.text = "${widget.price}";
+    _nameController.text = widget.itemModel.name ?? "";
+    _descriptionController.text = widget.itemModel.description ?? "";
+    _priceController.text = "${widget.itemModel.price ?? 0.0}";
     return SizedBox(
-      height: context.dynamicHeight(0.2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: context.dynamicWidth(0.30),
-            height: context.dynamicHeight(0.14),
-            child: CloudImage(
-              name: widget.imageUrl,
-              type: 'menu-item',
-            ),
+          Column(
+            children: [
+              SizedBox(
+                width: context.dynamicWidth(0.30),
+                height: context.dynamicHeight(0.14),
+                child: CloudImage(
+                    name: widget.itemModel.imageUrl,
+                    type: 'menu-item',
+                    isUploadAllowed: true,
+                    refreshFunction: () async {
+                      CommonUtils.log("refreshing the model for restaurant");
+                      if (widget.imageRefreshFunction != null) {
+                        widget.imageRefreshFunction!();
+                      }
+                    }),
+              ),
+              _isEditing
+                  ? Center(
+                      child: SizedBox(
+                        height: 30,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            FloatingActionButton(
+                              onPressed: () {
+                                widget.itemModel.name = _nameController.text;
+                                widget.itemModel.description =
+                                    _descriptionController.text;
+                                widget.itemModel.price =
+                                    double.parse(_priceController.text);
+                                if (widget.updateFunction != null) {
+                                  widget.updateFunction!(widget.itemModel);
+                                }
+                                setState(() {
+                                  _isEditing = false;
+                                });
+                              },
+                              child: const Icon(Icons.save),
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            FloatingActionButton(
+                              onPressed: () {
+                                _nameController.text =
+                                    widget.itemModel.name ?? "";
+                                _descriptionController.text =
+                                    widget.itemModel.description ?? "";
+                                _priceController.text =
+                                    "${widget.itemModel.price}";
+                                setState(() {
+                                  _isEditing = false;
+                                });
+                              },
+                              child: const Icon(Icons.undo),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : Container()
+            ],
           ),
           SizedBox(width: context.dynamicWidth(0.05)),
           Expanded(
@@ -73,7 +128,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                             autofocus: true,
                           )
                         : Text(
-                            widget.name,
+                            widget.itemModel.name ?? "Item Name",
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge
@@ -98,7 +153,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                             autofocus: true,
                           )
                         : Text(
-                            widget.description,
+                            widget.itemModel.description ?? "Item Description",
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -133,7 +188,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                           decimal: true),
                                 )
                               : Text(
-                                  "\$${widget.price}",
+                                  "\$${widget.itemModel.price ?? 0.0}",
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyLarge
