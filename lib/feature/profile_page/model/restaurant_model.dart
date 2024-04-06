@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:reservation/feature/profile_page/model/availability.dart';
 import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
 import 'package:reservation/feature/profile_page/model/table_model.dart';
 
@@ -13,6 +14,7 @@ class RestaurantModel {
   List<MenuItemModel> menuItems = [];
   int? maxConsecutiveSlots = 2;
   List<TableModel> tables = [];
+  Map<int, Availability> availability = {};
 
   RestaurantModel({
     this.id,
@@ -25,6 +27,7 @@ class RestaurantModel {
     required this.menuItems,
     this.maxConsecutiveSlots,
     required this.tables,
+    required this.availability,
   });
 
   factory RestaurantModel.fromMap(map) {
@@ -42,6 +45,8 @@ class RestaurantModel {
       tables: ((map['tables'] ?? []) as List)
           .map((field) => TableModel.fromMap(field))
           .toList(),
+      availability: ((map['availability'] ?? {}) as Map).map(
+          (key, val) => MapEntry(int.parse(key), Availability.fromMap(val))),
     );
   }
 
@@ -56,6 +61,8 @@ class RestaurantModel {
       'menuItems': menuItems.map((element) => element.toMap()),
       'maxConsecutiveSlots': maxConsecutiveSlots,
       'tables': tables.map((element) => element.toMap()),
+      'availability': availability
+          .map((key, value) => MapEntry(key.toString(), value.toMap())),
     };
   }
 
@@ -79,6 +86,8 @@ class RestaurantModel {
       tables: ((data['tables'] ?? []) as List)
           .map((e) => TableModel.fromMap(e as Map<String, dynamic>))
           .toList(growable: true),
+      availability: ((data['availability'] ?? {}) as Map).map(
+          (key, val) => MapEntry(int.parse(key), Availability.fromMap(val))),
     );
   }
 
@@ -93,6 +102,9 @@ class RestaurantModel {
       "menuItems": menuItems.map((e) => e.toMap()).toList(),
       if (maxConsecutiveSlots != null)
         "maxConsecutiveSlots": maxConsecutiveSlots,
+      "tables": tables.map((e) => e.toMap()).toList(),
+      "availability": availability
+          .map((key, value) => MapEntry(key.toString(), value.toMap())),
     };
   }
 }

@@ -1,0 +1,502 @@
+Subject: [PATCH] allow adding and updating availability
+---
+Index: lib/feature/profile_page/model/availability.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/feature/profile_page/model/availability.dart b/lib/feature/profile_page/model/availability.dart
+new file mode 100644
+--- /dev/null	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
++++ b/lib/feature/profile_page/model/availability.dart	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
+@@ -0,0 +1,46 @@
++import 'package:flutter/material.dart';
++
++class Availability {
++  int? dayOfWeek;
++  TimeOfDay? start;
++  TimeOfDay? end;
++
++  Availability({
++    this.dayOfWeek,
++    this.start,
++    this.end,
++  });
++
++  // Using a string format for TimeOfDay (HH:mm)
++  factory Availability.fromMap(Map<String, dynamic> map) {
++    return Availability(
++      dayOfWeek: map['dayOfWeek'],
++      start: _fromMapToTimeOfDay(map['start']),
++      end: _fromMapToTimeOfDay(map['end']),
++    );
++  }
++
++  Map<String, dynamic> toMap() {
++    return {
++      'dayOfWeek': dayOfWeek,
++      'start': _fromTimeOfDayToMap(start),
++      'end': _fromTimeOfDayToMap(end),
++    };
++  }
++
++  // Helper method to convert a TimeOfDay to a map format
++  static String? _fromTimeOfDayToMap(TimeOfDay? time) {
++    if (time == null) return null;
++    final hours = time.hour.toString().padLeft(2, '0');
++    final minutes = time.minute.toString().padLeft(2, '0');
++    return '$hours:$minutes';
++  }
++
++  // Helper method to convert a map format to a TimeOfDay
++  static TimeOfDay? _fromMapToTimeOfDay(String? timeString) {
++    if (timeString == null) return null;
++    final parts = timeString.split(':');
++    if (parts.length != 2) return null;
++    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
++  }
++}
+Index: lib/feature/profile_page/model/restaurant_model.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/feature/profile_page/model/restaurant_model.dart b/lib/feature/profile_page/model/restaurant_model.dart
+--- a/lib/feature/profile_page/model/restaurant_model.dart	(revision a3d89f1beb9b6c7b7c620c354e807b9b0067bad2)
++++ b/lib/feature/profile_page/model/restaurant_model.dart	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
+@@ -1,4 +1,5 @@
+ import 'package:cloud_firestore/cloud_firestore.dart';
++import 'package:reservation/feature/profile_page/model/availability.dart';
+ import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
+ import 'package:reservation/feature/profile_page/model/table_model.dart';
+ 
+@@ -13,6 +14,7 @@
+   List<MenuItemModel> menuItems = [];
+   int? maxConsecutiveSlots = 2;
+   List<TableModel> tables = [];
++  Map<int, Availability> availability = {};
+ 
+   RestaurantModel({
+     this.id,
+@@ -25,6 +27,7 @@
+     required this.menuItems,
+     this.maxConsecutiveSlots,
+     required this.tables,
++    required this.availability,
+   });
+ 
+   factory RestaurantModel.fromMap(map) {
+@@ -42,6 +45,8 @@
+       tables: ((map['tables'] ?? []) as List)
+           .map((field) => TableModel.fromMap(field))
+           .toList(),
++      availability: ((map['availability'] ?? {}) as Map).map(
++          (key, val) => MapEntry(int.parse(key), Availability.fromMap(val))),
+     );
+   }
+ 
+@@ -56,6 +61,8 @@
+       'menuItems': menuItems.map((element) => element.toMap()),
+       'maxConsecutiveSlots': maxConsecutiveSlots,
+       'tables': tables.map((element) => element.toMap()),
++      'availability': availability
++          .map((key, value) => MapEntry(key.toString(), value.toMap())),
+     };
+   }
+ 
+@@ -79,6 +86,8 @@
+       tables: ((data['tables'] ?? []) as List)
+           .map((e) => TableModel.fromMap(e as Map<String, dynamic>))
+           .toList(growable: true),
++      availability: ((data['availability'] ?? {}) as Map).map(
++          (key, val) => MapEntry(int.parse(key), Availability.fromMap(val))),
+     );
+   }
+ 
+@@ -93,6 +102,9 @@
+       "menuItems": menuItems.map((e) => e.toMap()).toList(),
+       if (maxConsecutiveSlots != null)
+         "maxConsecutiveSlots": maxConsecutiveSlots,
++      "tables": tables.map((e) => e.toMap()).toList(),
++      "availability": availability
++          .map((key, value) => MapEntry(key.toString(), value.toMap())),
+     };
+   }
+ }
+Index: lib/feature/profile_page/view/restaurant_view.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/feature/profile_page/view/restaurant_view.dart b/lib/feature/profile_page/view/restaurant_view.dart
+--- a/lib/feature/profile_page/view/restaurant_view.dart	(revision a3d89f1beb9b6c7b7c620c354e807b9b0067bad2)
++++ b/lib/feature/profile_page/view/restaurant_view.dart	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
+@@ -9,6 +9,7 @@
+ import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
+ import 'package:reservation/feature/profile_page/viewModel/profil_view_model.dart';
+ import 'package:reservation/feature/profile_page/viewModel/restaurant_view_model.dart';
++import 'package:reservation/products/component/availability_editor.dart';
+ import 'package:reservation/products/component/closable_widget.dart';
+ import 'package:reservation/products/component/menu_item_card.dart';
+ import 'package:reservation/products/component/table_item_card.dart';
+@@ -25,9 +26,11 @@
+   final TextEditingController _cuisineController = TextEditingController();
+   final TextEditingController _meanCostController = TextEditingController();
+   final TextEditingController _addressController = TextEditingController();
++  final TextEditingController _slotsController = TextEditingController();
+   bool _isEditing = false;
+   bool _isMenuChanged = false;
+   bool _isTablesChanged = false;
++  bool _isAvailabilityChanged = false;
+ 
+   @override
+   void initState() {
+@@ -47,6 +50,7 @@
+     _cuisineController.dispose();
+     _meanCostController.dispose();
+     _addressController.dispose();
++    _slotsController.dispose();
+     super.dispose();
+   }
+ 
+@@ -65,6 +69,7 @@
+     _cuisineController.text = restaurant?.cuisine ?? '';
+     _meanCostController.text = restaurant?.meanCost ?? '';
+     _addressController.text = restaurant?.address ?? '';
++    _slotsController.text = "${restaurant?.maxConsecutiveSlots ?? 1}";
+     if (restaurant != null) {
+       return Padding(
+         padding: context.pagePadding,
+@@ -219,6 +224,46 @@
+                                 ?.copyWith(
+                                   color: AppColors.silverlined,
+                                   fontWeight: FontWeight.bold,
++                                ),
++                          ),
++                  ),
++                ),
++              ],
++            ),
++            Row(
++              children: [
++                Text(
++                  "Consecutive Slots",
++                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
++                        color: AppColors.silverlined,
++                        fontWeight: FontWeight.bold,
++                      ),
++                ),
++                SizedBox(
++                  width: context.dynamicWidth(0.03),
++                ),
++                GestureDetector(
++                  onTap: () {
++                    setState(() {
++                      _isEditing = true;
++                    });
++                  },
++                  child: SizedBox(
++                    height: 25,
++                    width: context.dynamicWidth(0.5),
++                    child: _isEditing
++                        ? TextFormField(
++                            controller: _slotsController,
++                            autofocus: true,
++                          )
++                        : Text(
++                            "${restaurant.maxConsecutiveSlots}",
++                            style: Theme.of(context)
++                                .textTheme
++                                .titleMedium
++                                ?.copyWith(
++                                  color: AppColors.silverlined,
++                                  fontWeight: FontWeight.bold,
+                                 ),
+                           ),
+                   ),
+@@ -394,14 +439,60 @@
+                       onPressed: () {
+                         CommonUtils.log("Adding new table");
+                         restaurantState.addEmptyTable();
+-                        setState(() {
+-                          _isEditing = false;
+-                          _isTablesChanged = true;
+-                        });
+-                      },
+-                    ),
+-                  ),
++                        setState(
++                          () {
++                            _isEditing = false;
++                            _isTablesChanged = true;
++                          },
++                        );
++                      },
++                    ),
++                  ),
++                ),
++              ],
++            ),
++            Column(
++              crossAxisAlignment: CrossAxisAlignment.start,
++              children: <Widget>[
++                Padding(
++                  padding: context.paddingNormalVertical,
++                  child: Row(
++                    children: [
++                      Text(
++                        "Availability",
++                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
++                              color: AppColors.black,
++                              fontWeight: FontWeight.w600,
++                            ),
++                      ),
++                      const SizedBox(width: 20),
++                      _isAvailabilityChanged
++                          ? GestureDetector(
++                              onTap: () {
++                                CommonUtils.log("Saving availability");
++                                restaurantState.updateRestaurant(
++                                    restaurantState.currentRestaurant!);
++                                setState(() {
++                                  _isAvailabilityChanged = false;
++                                });
++                              },
++                              child: const Icon(Icons.save),
++                            )
++                          : Container(),
++                    ],
++                  ),
++                ),
++                const SizedBox(
++                  height: 10,
+                 ),
++                AvailabilityEditor(
++                  availability: restaurant.availability,
++                  updateFunction: () {
++                    setState(() {
++                      _isAvailabilityChanged = true;
++                    });
++                  },
++                ),
+               ],
+             ),
+           ],
+Index: lib/feature/profile_page/viewModel/restaurant_view_model.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/feature/profile_page/viewModel/restaurant_view_model.dart b/lib/feature/profile_page/viewModel/restaurant_view_model.dart
+--- a/lib/feature/profile_page/viewModel/restaurant_view_model.dart	(revision a3d89f1beb9b6c7b7c620c354e807b9b0067bad2)
++++ b/lib/feature/profile_page/viewModel/restaurant_view_model.dart	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
+@@ -1,6 +1,7 @@
+ import 'package:flutter/material.dart';
+ import 'package:reservation/core/util/common_utils.dart';
+ import 'package:cloud_firestore/cloud_firestore.dart';
++import 'package:reservation/feature/profile_page/model/availability.dart';
+ import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
+ import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
+ import 'package:reservation/feature/profile_page/model/table_model.dart';
+Index: lib/products/component/availability_editor.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/products/component/availability_editor.dart b/lib/products/component/availability_editor.dart
+new file mode 100644
+--- /dev/null	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
++++ b/lib/products/component/availability_editor.dart	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
+@@ -0,0 +1,82 @@
++import 'package:flutter/material.dart';
++import 'package:reservation/core/extensions/extension.dart';
++import 'package:reservation/feature/profile_page/model/availability.dart';
++
++class AvailabilityEditor extends StatefulWidget {
++  final Map<int, Availability> availability;
++
++  const AvailabilityEditor(
++      {super.key, required this.availability, this.updateFunction});
++
++  final void Function()? updateFunction;
++
++  @override
++  State<AvailabilityEditor> createState() => _AvailabilityEditorState();
++}
++
++class _AvailabilityEditorState extends State<AvailabilityEditor> {
++  @override
++  Widget build(BuildContext context) {
++    List<String> daysOfWeek = [
++      'Sunday',
++      'Monday',
++      'Tuesday',
++      'Wednesday',
++      'Thursday',
++      'Friday',
++      'Saturday'
++    ];
++    return Padding(
++      padding: context.pagePadding,
++      child: Column(
++        children: daysOfWeek.asMap().entries.map((entry) {
++          int index = entry.key;
++          String day = entry.value;
++          Availability? timeRange = widget.availability[index];
++          return ListTile(
++            title: Text(day),
++            subtitle: Text(
++                'Start: ${timeRange?.start?.format(context)} - End: ${timeRange?.end?.format(context)}'),
++            onTap: () async {
++              await _pickTime(context, index, true).then((value) async {
++                await _pickTime(context, index, false).then((value) {
++                  if (widget.updateFunction != null) {
++                    widget.updateFunction!();
++                  }
++                });
++              });
++            },
++          );
++        }).toList(),
++      ),
++    );
++  }
++
++  Future<void> _pickTime(BuildContext context, int day, bool isStart) async {
++    const startTimeDef = TimeOfDay(hour: 0, minute: 0);
++    const endTimeDef = TimeOfDay(hour: 23, minute: 59);
++    final TimeOfDay? picked = await showTimePicker(
++      context: context,
++      initialTime: isStart
++          ? widget.availability[day]?.start ?? startTimeDef
++          : widget.availability[day]?.end ?? endTimeDef,
++    );
++    if (picked != null) {
++      setState(() {
++        if (widget.availability.containsKey(day)) {
++          widget.availability[day]!.dayOfWeek = day;
++          if (isStart) {
++            widget.availability[day]!.start = picked;
++          } else {
++            widget.availability[day]!.end = picked;
++          }
++        } else {
++          widget.availability[day] = Availability(
++              start: isStart ? picked : startTimeDef,
++              end: isStart ? startTimeDef : picked,
++              dayOfWeek: day);
++        }
++      });
++    }
++  }
++}
+Index: lib/products/component/select_day_and_time.dart
+===================================================================
+diff --git a/lib/products/component/select_day_and_time.dart b/lib/products/component/select_day_and_time.dart
+new file mode 100644
+--- /dev/null	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
++++ b/lib/products/component/select_day_and_time.dart	(revision 2cfa1d8031e4cab24c2294d99b3d308a5ba3d70e)
+@@ -0,0 +1,102 @@
++import 'package:flutter/material.dart';
++
++class SelectDayAndTime extends StatefulWidget {
++  @override
++  _SelectDayAndTimeState createState() => _SelectDayAndTimeState();
++}
++
++class _SelectDayAndTimeState extends State<SelectDayAndTime> {
++  String? _selectedDay;
++  TimeOfDay? _startTime;
++  TimeOfDay? _endTime;
++
++  final List<String> _daysOfWeek = [
++    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
++  ];
++
++  void _selectTime(BuildContext context, bool isStartTime) async {
++    final TimeOfDay? picked = await showTimePicker(
++      context: context,
++      initialTime: TimeOfDay.now(),
++    );
++
++    if (picked != null) {
++      setState(() {
++        if (isStartTime) {
++          _startTime = picked;
++        } else {
++          _endTime = picked;
++        }
++      });
++    }
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return ElevatedButton(
++      onPressed: () => _showSelectDayAndTimeSheet(context),
++      child: Text('Select Day & Time'),
++    );
++  }
++
++  void _showSelectDayAndTimeSheet(BuildContext context) {
++    showModalBottomSheet(
++      context: context,
++      builder: (BuildContext context) {
++        return Container(
++          height: 300,
++          child: Column(
++            children: [
++              Expanded(
++                child: ListView.builder(
++                  itemCount: _daysOfWeek.length,
++                  itemBuilder: (BuildContext context, int index) {
++                    return ListTile(
++                      title: Text(_daysOfWeek[index]),
++                      onTap: () => setState(() {
++                        _selectedDay = _daysOfWeek[index];
++                        Navigator.pop(context);
++                      }),
++                    );
++                  },
++                ),
++              ),
++              ElevatedButton(
++                onPressed: () => _selectTime(context, true),
++                child: Text('Select Start Time'),
++              ),
++              if (_startTime != null)
++                Text('Start Time: ${_startTime!.format(context)}'),
++              ElevatedButton(
++                onPressed: () => _selectTime(context, false),
++                child: Text('Select End Time'),
++              ),
++              if (_endTime != null)
++                Text('End Time: ${_endTime!.format(context)}'),
++            ],
++          ),
++        );
++      },
++    ).then((value) {
++      // Optionally do something after the bottom sheet is closed
++      // For example, you could show a summary or confirmation dialog
++      if (_selectedDay != null && _startTime != null && _endTime != null) {
++        showDialog(
++          context: context,
++          builder: (BuildContext context) {
++            return AlertDialog(
++              title: Text('Selection Summary'),
++              content: Text('Day: $_selectedDay\nStart Time: ${_startTime!.format(context)}\nEnd Time: ${_endTime!.format(context)}'),
++              actions: [
++                TextButton(
++                  onPressed: () => Navigator.of(context).pop(),
++                  child: Text('OK'),
++                ),
++              ],
++            );
++          },
++        );
++      }
++    });
++  }
++}
+\ No newline at end of file

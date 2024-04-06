@@ -9,6 +9,7 @@ import 'package:reservation/core/util/common_utils.dart';
 import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
 import 'package:reservation/feature/profile_page/viewModel/profil_view_model.dart';
 import 'package:reservation/feature/profile_page/viewModel/restaurant_view_model.dart';
+import 'package:reservation/products/component/availability_editor.dart';
 import 'package:reservation/products/component/closable_widget.dart';
 import 'package:reservation/products/component/menu_item_card.dart';
 import 'package:reservation/products/component/table_item_card.dart';
@@ -25,9 +26,11 @@ class _RestaurantViewState extends State<RestaurantView> {
   final TextEditingController _cuisineController = TextEditingController();
   final TextEditingController _meanCostController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _slotsController = TextEditingController();
   bool _isEditing = false;
   bool _isMenuChanged = false;
   bool _isTablesChanged = false;
+  bool _isAvailabilityChanged = false;
 
   @override
   void initState() {
@@ -47,6 +50,7 @@ class _RestaurantViewState extends State<RestaurantView> {
     _cuisineController.dispose();
     _meanCostController.dispose();
     _addressController.dispose();
+    _slotsController.dispose();
     super.dispose();
   }
 
@@ -65,6 +69,7 @@ class _RestaurantViewState extends State<RestaurantView> {
     _cuisineController.text = restaurant?.cuisine ?? '';
     _meanCostController.text = restaurant?.meanCost ?? '';
     _addressController.text = restaurant?.address ?? '';
+    _slotsController.text = "${restaurant?.maxConsecutiveSlots ?? 1}";
     if (restaurant != null) {
       return Padding(
         padding: context.pagePadding,
@@ -213,6 +218,46 @@ class _RestaurantViewState extends State<RestaurantView> {
                           )
                         : Text(
                             "${restaurant.address}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: AppColors.silverlined,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  "Consecutive Slots",
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.silverlined,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                SizedBox(
+                  width: context.dynamicWidth(0.03),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isEditing = true;
+                    });
+                  },
+                  child: SizedBox(
+                    height: 25,
+                    width: context.dynamicWidth(0.5),
+                    child: _isEditing
+                        ? TextFormField(
+                            controller: _slotsController,
+                            autofocus: true,
+                          )
+                        : Text(
+                            "${restaurant.maxConsecutiveSlots}",
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -394,13 +439,59 @@ class _RestaurantViewState extends State<RestaurantView> {
                       onPressed: () {
                         CommonUtils.log("Adding new table");
                         restaurantState.addEmptyTable();
-                        setState(() {
-                          _isEditing = false;
-                          _isTablesChanged = true;
-                        });
+                        setState(
+                          () {
+                            _isEditing = false;
+                            _isTablesChanged = true;
+                          },
+                        );
                       },
                     ),
                   ),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: context.paddingNormalVertical,
+                  child: Row(
+                    children: [
+                      Text(
+                        "Availability",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(width: 20),
+                      _isAvailabilityChanged
+                          ? GestureDetector(
+                              onTap: () {
+                                CommonUtils.log("Saving availability");
+                                restaurantState.updateRestaurant(
+                                    restaurantState.currentRestaurant!);
+                                setState(() {
+                                  _isAvailabilityChanged = false;
+                                });
+                              },
+                              child: const Icon(Icons.save),
+                            )
+                          : Container(),
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                AvailabilityEditor(
+                  availability: restaurant.availability,
+                  updateFunction: () {
+                    setState(() {
+                      _isAvailabilityChanged = true;
+                    });
+                  },
                 ),
               ],
             ),
