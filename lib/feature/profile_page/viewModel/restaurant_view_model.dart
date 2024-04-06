@@ -3,6 +3,7 @@ import 'package:reservation/core/util/common_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
 import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
+import 'package:reservation/feature/profile_page/model/table_model.dart';
 import 'package:uuid/uuid.dart';
 
 class RestaurantViewModel extends ChangeNotifier {
@@ -55,8 +56,23 @@ class RestaurantViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  addEmptyTable() {
+    var itemId = const Uuid().v4().toString();
+    _currentRestaurent?.tables.add(
+      TableModel(
+        id: itemId,
+      ),
+    );
+    notifyListeners();
+  }
+
   removeMenuItem(String id) {
     _currentRestaurent?.menuItems.removeWhere((element) => id == element.id);
+    notifyListeners();
+  }
+
+  removeTable(String id) {
+    _currentRestaurent?.tables.removeWhere((element) => id == element.id);
     notifyListeners();
   }
 
@@ -68,7 +84,20 @@ class RestaurantViewModel extends ChangeNotifier {
       itemToUpdate.description = itemModel.description;
       itemToUpdate.price = itemModel.price;
     }
-    notifyListeners();
+    // notifyListeners();
+  }
+
+  updateTable(TableModel itemModel) {
+    var itemToUpdate = _currentRestaurent?.tables
+        .firstWhere((element) => itemModel.id == element.id);
+    if (itemToUpdate != null) {
+      itemToUpdate.ref = itemModel.ref;
+      itemToUpdate.description = itemModel.description;
+      itemToUpdate.allowManualSize = itemModel.allowManualSize;
+      itemToUpdate.canExtend = itemModel.canExtend;
+      itemToUpdate.occupancy = itemModel.occupancy;
+    }
+    // notifyListeners();
   }
 
   updateRestaurant(RestaurantModel updated) async {

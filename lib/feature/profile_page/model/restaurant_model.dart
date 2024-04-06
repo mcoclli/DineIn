@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:reservation/core/util/common_utils.dart';
 import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
+import 'package:reservation/feature/profile_page/model/table_model.dart';
 
 class RestaurantModel {
   String? id;
@@ -11,6 +11,8 @@ class RestaurantModel {
   String? meanCost;
   String? address;
   List<MenuItemModel> menuItems = [];
+  int? maxConsecutiveSlots = 2;
+  List<TableModel> tables = [];
 
   RestaurantModel({
     this.id,
@@ -21,6 +23,8 @@ class RestaurantModel {
     this.meanCost,
     this.address,
     required this.menuItems,
+    this.maxConsecutiveSlots,
+    required this.tables,
   });
 
   factory RestaurantModel.fromMap(map) {
@@ -34,6 +38,10 @@ class RestaurantModel {
       menuItems: ((map['menuItems'] ?? []) as List)
           .map((field) => MenuItemModel.fromMap(field))
           .toList(),
+      maxConsecutiveSlots: map['maxConsecutiveSlots'],
+      tables: ((map['tables'] ?? []) as List)
+          .map((field) => TableModel.fromMap(field))
+          .toList(),
     );
   }
 
@@ -46,6 +54,8 @@ class RestaurantModel {
       'meanCost': meanCost,
       'address': address,
       'menuItems': menuItems.map((element) => element.toMap()),
+      'maxConsecutiveSlots': maxConsecutiveSlots,
+      'tables': tables.map((element) => element.toMap()),
     };
   }
 
@@ -65,6 +75,10 @@ class RestaurantModel {
       menuItems: ((data['menuItems'] ?? []) as List)
           .map((e) => MenuItemModel.fromMap(e as Map<String, dynamic>))
           .toList(growable: true),
+      maxConsecutiveSlots: data['maxConsecutiveSlots'],
+      tables: ((data['tables'] ?? []) as List)
+          .map((e) => TableModel.fromMap(e as Map<String, dynamic>))
+          .toList(growable: true),
     );
   }
 
@@ -77,6 +91,8 @@ class RestaurantModel {
       if (meanCost != null) "meanCost": meanCost,
       if (address != null) "address": address,
       "menuItems": menuItems.map((e) => e.toMap()).toList(),
+      if (maxConsecutiveSlots != null)
+        "maxConsecutiveSlots": maxConsecutiveSlots,
     };
   }
 }

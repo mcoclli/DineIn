@@ -7,6 +7,7 @@ import 'package:reservation/core/extensions/extension.dart';
 import 'package:reservation/core/util/common_utils.dart';
 import 'package:reservation/feature/login_register_page/model/users_model.dart';
 import 'package:reservation/feature/profile_page/view/restaurant_view.dart';
+import 'package:reservation/products/component/table_item_card.dart';
 import 'package:reservation/feature/profile_page/viewModel/profil_view_model.dart';
 import 'package:reservation/feature/profile_page/viewModel/restaurant_view_model.dart';
 import 'package:reservation/products/widgets/bottom_navbar.dart';
@@ -62,7 +63,6 @@ class _ProfilePageState extends State<ProfilePage> {
             _stackWidget(context, profileProvider, restaurantState),
             _adminText(context, loggedInUser),
             const RestaurantView(),
-            _reviews(context),
           ],
         ),
       ),
@@ -122,77 +122,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Padding _reviews(BuildContext context) {
-    return Padding(
-      padding: context.pagePadding,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            StringConstant.review,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.blueMetallic, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(
-            height: context.dynamicHeight(0.02),
-          ),
-          SizedBox(
-            width: context.dynamicWidth(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const PngImage(name: ImageItems.logImage),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      StringConstant.hello,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.blueMetallic,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(
-                      width: context.dynamicWidth(0.8),
-                      child: Text(
-                        StringConstant.text,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: AppColors.silverlined,
-                                ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: context.dynamicHeight(0.01),
-                    ),
-                    Row(children: [
-                      for (int i = 0; i < 5; i++)
-                        Icon(Icons.star,
-                            size: 20,
-                            color: i == 4
-                                ? AppColors.darkGrey
-                                : AppColors.california),
-                      SizedBox(
-                        width: context.dynamicWidth(0.03),
-                      ),
-                      Text(
-                        StringConstant.number,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.darkGrey,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ]),
-                  ],
-                ),
-              ],
-            ),
-          )
-        ],
       ),
     );
   }

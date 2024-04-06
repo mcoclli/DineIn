@@ -11,6 +11,7 @@ import 'package:reservation/feature/profile_page/viewModel/profil_view_model.dar
 import 'package:reservation/feature/profile_page/viewModel/restaurant_view_model.dart';
 import 'package:reservation/products/component/closable_widget.dart';
 import 'package:reservation/products/component/menu_item_card.dart';
+import 'package:reservation/products/component/table_item_card.dart';
 
 class RestaurantView extends StatefulWidget {
   const RestaurantView({super.key});
@@ -26,6 +27,7 @@ class _RestaurantViewState extends State<RestaurantView> {
   final TextEditingController _addressController = TextEditingController();
   bool _isEditing = false;
   bool _isMenuChanged = false;
+  bool _isTablesChanged = false;
 
   @override
   void initState() {
@@ -269,7 +271,8 @@ class _RestaurantViewState extends State<RestaurantView> {
                             .ref(item.imageUrl!)
                             .delete()
                             .then((value) async {
-                              CommonUtils.log("Image was deleted for url ${item.imageUrl}");
+                          CommonUtils.log(
+                              "Image was deleted for url ${item.imageUrl}");
                           await DefaultCacheManager()
                               .removeFile(item.imageUrl!)
                               .then((value) {
@@ -315,6 +318,85 @@ class _RestaurantViewState extends State<RestaurantView> {
                         setState(() {
                           _isEditing = false;
                           _isMenuChanged = true;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: context.paddingNormalVertical,
+                  child: Row(
+                    children: [
+                      Text(
+                        "Table",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(width: 20),
+                      _isTablesChanged
+                          ? GestureDetector(
+                              onTap: () {
+                                CommonUtils.log("Saving table items");
+                                restaurantState.updateRestaurant(
+                                    restaurantState.currentRestaurant!);
+                                setState(() {
+                                  _isTablesChanged = false;
+                                });
+                              },
+                              child: const Icon(Icons.save),
+                            )
+                          : Container(),
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                ...(restaurant.tables ?? []).map((item) {
+                  return Padding(
+                    padding: context.pagePaddingBottom,
+                    child: ClosableWidget(
+                      closeFunction: () async {
+                        CommonUtils.log("Removing table ${item.id}");
+                        restaurantState.removeTable(item.id);
+                        setState(() {
+                          _isTablesChanged = true;
+                        });
+                      },
+                      child: TableItemCard(
+                        model: item,
+                        updateFunction: (itemModel) {
+                          restaurantState.updateTable(itemModel);
+                          setState(() {
+                            _isTablesChanged = true;
+                          });
+                        },
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(
+                  height: 5,
+                ),
+                Center(
+                  child: CircleAvatar(
+                    radius: 20, // Adjust the size of the button
+                    backgroundColor: Colors.blue, // Button color
+                    child: IconButton(
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      onPressed: () {
+                        CommonUtils.log("Adding new table");
+                        restaurantState.addEmptyTable();
+                        setState(() {
+                          _isEditing = false;
+                          _isTablesChanged = true;
                         });
                       },
                     ),
