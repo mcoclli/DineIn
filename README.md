@@ -14,6 +14,7 @@ DineIn is a reservation application designed for Android mobile devices. It faci
 - **Menu Selection**: Customers can view restaurant menus and select desired items.
 - **Reservation Request**: Customers can request reservations for their preferred date and time. Upon submission, the restaurant will review and either accept or decline the request.
 - **Communication**: Customers are informed of reservation status updates via phone communication with the restaurant.
+ **Communication**: Customers are informed of reservation status updates via phone communication with the restaurant.
 
 
 ## Payment Handling
