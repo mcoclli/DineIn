@@ -36,7 +36,7 @@ class _RestaurantViewState extends State<RestaurantView> {
   void initState() {
     super.initState();
     final profileState = Provider.of<ProfileViewModel>(context, listen: false);
-    profileState.fetchUserModel().then((_) {
+    profileState.fetchUserModelWithRetry().then((_) {
       CommonUtils.log("User data fetched, getting restaurant");
       // After fetching the user, fetch the restaurant
       Provider.of<RestaurantViewModel>(context, listen: false)
@@ -133,7 +133,7 @@ class _RestaurantViewState extends State<RestaurantView> {
                   width: context.dynamicWidth(0.03),
                 ),
                 SizedBox(
-                  width: context.dynamicWidth(0.8),
+                  width: context.dynamicWidth(0.7),
                   child: GestureDetector(
                     onTap: () {
                       setState(() {

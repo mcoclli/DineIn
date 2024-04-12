@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reservation/core/util/common_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:reservation/feature/profile_page/model/availability.dart';
 import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
 import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
 import 'package:reservation/feature/profile_page/model/table_model.dart';

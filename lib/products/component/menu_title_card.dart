@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:reservation/core/constants/app_colors.dart';
 import 'package:reservation/core/constants/app_string.dart';
+import 'package:reservation/core/constants/image_const.dart';
 import 'package:reservation/core/extensions/extension.dart';
+import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
 
 class MenuCard extends StatelessWidget {
   const MenuCard({
     super.key,
-    required this.image,
-    required this.title,
-    required this.price,
+    required this.menuItem,
   });
 
-  final String image, title;
-  final double price;
+  final MenuItemModel menuItem;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +20,10 @@ class MenuCard extends StatelessWidget {
         SizedBox(
           width: context.dynamicWidth(0.30),
           height: context.dynamicHeight(0.13),
-          child: Image.asset(image),
+          child: CloudImage(
+            name: menuItem.imageUrl,
+            type: "menu-item",
+          ),
         ),
         SizedBox(width: context.dynamicWidth(0.05)),
         Expanded(
@@ -31,7 +33,7 @@ class MenuCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  menuItem.name ?? "Name",
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: AppColors.black,
                         fontWeight: FontWeight.w500,
@@ -40,8 +42,8 @@ class MenuCard extends StatelessWidget {
                 SizedBox(
                   height: context.dynamicHeight(0.01),
                 ),
-                const Text(
-                  StringConstant.shortbread,
+                Text(
+                  menuItem.description ?? "description",
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -58,13 +60,9 @@ class MenuCard extends StatelessWidget {
                       radius: 2,
                       backgroundColor: AppColors.darkGrey,
                     ),
-                    SizedBox(
-                      width: context.dynamicWidth(0.02),
-                    ),
-                    const Text(StringConstant.chinese),
                     const Spacer(),
                     Text(
-                      "USD$price",
+                      "\$${menuItem.price}",
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: AppColors.california,
                             fontWeight: FontWeight.w500,

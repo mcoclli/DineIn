@@ -49,7 +49,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
           Column(
             children: [
               SizedBox(
-                width: context.dynamicWidth(0.30),
+                width: context.dynamicWidth(0.26),
                 height: context.dynamicHeight(0.14),
                 child: CloudImage(
                     name: widget.itemModel.imageUrl,

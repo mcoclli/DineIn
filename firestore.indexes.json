@@ -1,4 +1,22 @@
 {
-  "indexes": [],
-  "fieldOverrides": []
+  "indexes": [
+    {
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "restaurantRef", "order": "ASCENDING"},
+        { "fieldPath": "start", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "restaurantRef", "order": "ASCENDING"},
+        { "fieldPath": "start", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": [
+  ]
 }

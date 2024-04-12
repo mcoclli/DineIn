@@ -115,7 +115,7 @@ mixin Validation<T extends StatefulWidget> on State<T> {
                   "context is [${navigatorKey.currentState?.context}]"),
               navigatorKey.currentState!.pushReplacement(
                 MaterialPageRoute(
-                  builder: (_) => const LoginPage(),
+                  builder: (_) =>  LoginPage(key: Key('register_page_key')),
                 ),
               )
             },
@@ -136,7 +136,7 @@ mixin Validation<T extends StatefulWidget> on State<T> {
               Fluttertoast.showToast(msg: "Logout successful..."),
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (context) => const LoginPage(),
+                  builder: (context) => LoginPage(key: Key('register_page_key')),
                 ),
               )
             },

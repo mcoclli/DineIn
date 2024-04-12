@@ -35,16 +35,6 @@ class ReservationCategoryItem extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            SizedBox(
-              width: context.dynamicWidth(0.03),
-            ),
-            Text(
-              StringConstant.timestoday,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.outoftheblue,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
           ],
         ),
         const TimeContainer(),

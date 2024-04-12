@@ -9,9 +9,9 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:reservation/core/util/common_utils.dart';
-import 'package:path/path.dart' as path;
 
 class ImageItems {
   final loginlogoImage = "image";
@@ -60,6 +60,7 @@ class CloudImage extends StatefulWidget {
       required this.type,
       this.isUploadAllowed = false,
       this.refreshFunction});
+
   final String? name;
   final String type;
   final bool isUploadAllowed;
@@ -122,20 +123,29 @@ class _CloudImageState extends State<CloudImage> {
             } else {
               // data loaded:
               final image = snapshot.data;
-              if (image != null && image != "NA") {
+              if (image != null && image.isNotEmpty && image != "NA") {
                 CommonUtils.log("Image url loaded : [$image] ");
                 return CachedNetworkImage(
                   imageUrl: image,
                   cacheKey: widget.name,
+                  fit: BoxFit.cover,
                   progressIndicatorBuilder: (context, url, downloadProgress) =>
                       CircularProgressIndicator(
                           value: downloadProgress.progress),
                   errorWidget: (context, url, error) => const Icon(Icons.error),
                 );
               } else {
+                if (image?.isEmpty == true) {
+                  CommonUtils.log("Clearing image cache as the url was not fetched");
+                  imageCache.clear();
+                  imageCache.clearLiveImages();
+                  DefaultCacheManager().removeFile(widget.name!).then((value) {
+                    _instance.removeCacheEntry(mapKey: widget.name!);
+                  });
+                }
                 return Image.asset(
                   'assets/image/defaults/${widget.type}.png',
-                  fit: BoxFit.contain,
+                  fit: BoxFit.fitHeight,
                 );
               }
             }
@@ -183,7 +193,9 @@ class _CloudImageState extends State<CloudImage> {
 
 class PngImage extends StatelessWidget {
   const PngImage({super.key, required this.name});
+
   final String name;
+
   @override
   Widget build(BuildContext context) {
     return Image.asset(_nameWithPath, fit: BoxFit.fitHeight);
@@ -194,7 +206,9 @@ class PngImage extends StatelessWidget {
 
 class SvgImage extends StatelessWidget {
   const SvgImage({super.key, required this.name});
+
   final String name;
+
   @override
   Widget build(BuildContext context) {
     return SvgPicture.asset(_nameWithPath, fit: BoxFit.cover);
@@ -205,7 +219,9 @@ class SvgImage extends StatelessWidget {
 
 class LottieImage extends StatelessWidget {
   const LottieImage({super.key, required this.name});
+
   final String name;
+
   @override
   Widget build(BuildContext context) {
     return Lottie.asset(_nameWithPath, fit: BoxFit.cover);

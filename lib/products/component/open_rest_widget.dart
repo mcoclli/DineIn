@@ -1,114 +1,117 @@
 import 'package:flutter/material.dart';
 import 'package:reservation/core/constants/app_colors.dart';
 import 'package:reservation/core/constants/app_string.dart';
+import 'package:reservation/core/constants/image_const.dart';
 import 'package:reservation/core/extensions/extension.dart';
-import 'package:reservation/feature/home_page/model/open_rest_model.dart';
+import 'package:reservation/core/util/common_utils.dart';
+import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
+import 'package:reservation/feature/reservation_page/view/reservation_view.dart';
 
 class OpenRestWidget extends StatelessWidget {
-  const OpenRestWidget({super.key, required OpenRestModel model})
+  const OpenRestWidget({super.key, required RestaurantModel model})
       : _model = model;
 
-  final OpenRestModel _model;
+  final RestaurantModel _model;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: context.dynamicHeight(0.14),
-      width: context.dynamicWidth(0.80),
-      decoration: context.boxDecoraiton,
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        _model.imagePath,
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+    return GestureDetector(
+      onTap: () {
+        CommonUtils.log("clicked on ${_model.restaurantRef}");
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReservationsPage(
+              model: _model,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        height: context.dynamicHeight(0.14),
+        width: context.dynamicWidth(0.80),
+        decoration: context.boxDecoraiton,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Row(
+            SizedBox(
+              height: 200,
+              width: 150,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: CloudImage(
+                      name: _model.baseImageUrl, type: "restaurant-banner"),
+                ),
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _model.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.blueMetallic,
-                      fontWeight: FontWeight.bold),
+                SizedBox(
+                  width: context.dynamicWidth(0.6),
+                  child: Text(
+                    _model.name ?? "Restaurant Name",
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.blueMetallic,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
                 SizedBox(
-                  width: context.dynamicWidth(0.02),
+                  height: context.dynamicHeight(0.01),
                 ),
-                Container(
-                  height: context.dynamicHeight(0.03),
-                  width: context.dynamicWidth(0.35),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: _model.color,
-                  ),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          color: AppColors.white,
-                          size: 20,
-                        ),
-                        Text(
-                          _model.text,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.location_on_outlined,
+                        color: Colors.black26),
+                    SizedBox(
+                      width: context.dynamicWidth(0.5),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _model.address ?? "Location",
                           style: Theme.of(context)
                               .textTheme
-                              .titleLarge
+                              .titleMedium
                               ?.copyWith(
-                                  color: AppColors.white,
+                                  color: AppColors.black.withOpacity(0.2),
                                   fontWeight: FontWeight.bold),
                         ),
-                        Container()
-                      ]),
-                ),
-              ],
-            ),
-            SizedBox(
-              height: context.dynamicHeight(0.01),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.location_on_outlined, color: Colors.black26),
-                Text(
-                  StringConstant.addresText,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.black.withOpacity(0.2),
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            SizedBox(
-              height: context.dynamicHeight(0.01),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text('35-42 Min'),
-                SizedBox(
-                  width: context.dynamicWidth(0.03),
-                ),
-                const Icon(
-                  Icons.star,
-                  color: Colors.yellow,
-                  size: 20,
-                ),
-                const Text('4.5'),
-                SizedBox(
-                  width: context.dynamicWidth(0.03),
-                ),
-                const Icon(
-                  Icons.call,
-                  size: 20,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(
-                  width: context.dynamicWidth(0.02),
+                  height: context.dynamicHeight(0.01),
                 ),
-                const Text(StringConstant.contact),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(_model.cuisine ?? "Cuisine"),
+                    SizedBox(
+                      width: context.dynamicWidth(0.03),
+                    ),
+                    SizedBox(
+                      width: context.dynamicWidth(0.03),
+                    ),
+                    const Icon(
+                      Icons.call,
+                      size: 20,
+                    ),
+                    SizedBox(
+                      width: context.dynamicWidth(0.02),
+                    ),
+                    const Text(StringConstant.contact),
+                  ],
+                ),
               ],
             ),
           ],
         ),
-      ]),
+      ),
     );
   }
 }

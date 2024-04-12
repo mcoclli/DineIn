@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:reservation/core/util/common_utils.dart';
 import 'package:reservation/feature/profile_page/model/availability.dart';
 import 'package:reservation/feature/profile_page/model/menu_item_model.dart';
 import 'package:reservation/feature/profile_page/model/table_model.dart';
@@ -15,6 +16,7 @@ class RestaurantModel {
   int? maxConsecutiveSlots = 2;
   List<TableModel> tables = [];
   Map<int, Availability> availability = {};
+  int slotDurationMin; // defaults for 15min
 
   RestaurantModel({
     this.id,
@@ -28,7 +30,8 @@ class RestaurantModel {
     this.maxConsecutiveSlots,
     required this.tables,
     required this.availability,
-  });
+    slotDurationMin,
+  }) : slotDurationMin = slotDurationMin ?? 15;
 
   factory RestaurantModel.fromMap(map) {
     return RestaurantModel(
@@ -47,6 +50,7 @@ class RestaurantModel {
           .toList(),
       availability: ((map['availability'] ?? {}) as Map).map(
           (key, val) => MapEntry(int.parse(key), Availability.fromMap(val))),
+      slotDurationMin: map['slotDurationMin'] ?? 15,
     );
   }
 
@@ -63,6 +67,7 @@ class RestaurantModel {
       'tables': tables.map((element) => element.toMap()),
       'availability': availability
           .map((key, value) => MapEntry(key.toString(), value.toMap())),
+      'slotDurationMin': slotDurationMin,
     };
   }
 
@@ -88,6 +93,7 @@ class RestaurantModel {
           .toList(growable: true),
       availability: ((data['availability'] ?? {}) as Map).map(
           (key, val) => MapEntry(int.parse(key), Availability.fromMap(val))),
+      slotDurationMin: data['slotDurationMin'] ?? 15,
     );
   }
 
@@ -105,6 +111,14 @@ class RestaurantModel {
       "tables": tables.map((e) => e.toMap()).toList(),
       "availability": availability
           .map((key, value) => MapEntry(key.toString(), value.toMap())),
+      "slotDurationMin": slotDurationMin,
     };
+  }
+
+  bool isRestaurantAvailable(DateTime dateTime) {
+    var availabilityData = availability[dateTime.weekday % 7];
+    CommonUtils.log("availabilityData : $availabilityData");
+    return availabilityData?.isWithinAvailability(dateTime) ??
+        false;
   }
 }

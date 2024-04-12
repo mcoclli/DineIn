@@ -1,105 +1,239 @@
+import 'dart:core';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:reservation/core/util/common_utils.dart';
+import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
 import 'package:reservation/feature/reservation_page/model/reservation_model.dart';
-import 'package:reservation/products/mixin/reservation_category.dart';
 
 class ReservationViewModel extends ChangeNotifier {
-  List<String> toTimeList = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14"
-  ];
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  List<ReservationModel>? _reservations;
 
-  List<bool> toTimeListSelect = [
-    false,
-    true,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-  ];
+  List<ReservationModel> futureReservations = [];
+  List<ReservationModel> pastReservations = [];
+  bool isLoading = true;
 
-  var formattedDate = DateFormat(' h:mm a, d MMM, EEEE').format(DateTime.now());
-  String selectedToTime = "2";
-  int selectedCategoryIndex = 0;
+  late String _restaurantRef;
+  DateTime reservationStart = DateTime.now().add(const Duration(hours: 1));
+  int pax = 1;
+  int slots = 1;
+  String tableId = "";
 
-  double restoInfoHeight = 200 + 170 - kToolbarHeight;
+  setReservationStart(DateTime dateTime) {
+    reservationStart = dateTime;
+  }
 
-  updateToList(int index) {
-    toTimeListSelect[index] = !toTimeListSelect[index];
-    toTimeListSelect[index] == true
-        ? selectedToTime = toTimeList[index]
-        : selectedToTime = ' ';
+  setPax(int pax) {
+    this.pax = pax;
+  }
+
+  setSlots(int slots) {
+    this.slots = slots;
+  }
+
+  setTableId(String tableId) {
+    this.tableId = tableId;
+  }
+
+  notifyAll() {
     notifyListeners();
+  }
 
-    for (int i = 0; i < toTimeListSelect.length; i++) {
-      toTimeListSelect[i] = false;
-      notifyListeners();
+  List<ReservationModel>? get currentReservations => _reservations;
+
+  fetchReservations(RestaurantModel restaurant, {bool forced = false}) async {
+    if (!forced && _reservations != null) {
+      CommonUtils.log(
+          "The restaurant is already loaded and returning the old value ${_reservations?.length}");
+      return;
     }
-    toTimeListSelect[index] = !toTimeListSelect[index];
-    toTimeListSelect[index] == true
-        ? selectedToTime = toTimeList[index]
-        : selectedToTime = ' ';
-    notifyListeners();
+    _restaurantRef = restaurant.restaurantRef!;
+    CommonUtils.log("Fetching restaurant for $_restaurantRef");
+    // _db.settings = const Settings(
+    //   cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    // );
+    var startTime = DateTime.now().subtract(
+        Duration(minutes: (15 * (restaurant.maxConsecutiveSlots ?? 2))));
+    await _db
+        .collection("reservations")
+        .where("restaurantRef", isEqualTo: _restaurantRef)
+        .where("start", isGreaterThanOrEqualTo: Timestamp.fromDate(startTime))
+        .withConverter<ReservationModel>(
+            fromFirestore: ReservationModel.fromFirestore,
+            toFirestore: (ReservationModel reservationModel, options) =>
+                reservationModel.toFirestore())
+        .get()
+        .then(
+      (querySnapshot) {
+        _reservations = querySnapshot.docs.map((e) => e.data()).toList();
+        CommonUtils.log("Received reservations data ${_reservations?.length}");
+        notifyListeners();
+      },
+    );
   }
 
-  dateToList(DateTime dateTime) {
-    formattedDate = dateTime as String;
-    notifyListeners();
-  }
-
-  scrollToCategory(int index) {
-    if (selectedCategoryIndex != index) {
-      int totalItems = 0;
-
-      for (var i = 0; i < index; i++) {
-        totalItems += allCategoryMenus[i].items.length;
+  Future<ReservationModel?> makeReservation(Map<String, int> menu,
+      String customerName, String customerContact, String? notes) async {
+    try {
+      ReservationModel reservation = ReservationModel(
+          restaurantRef: _restaurantRef,
+          start: reservationStart,
+          slots: slots,
+          menuItems: menu.entries
+              .map((e) => ReservationMenuItem(menuId: e.key, qty: e.value))
+              .toList(),
+          notes: notes,
+          tableId: tableId,
+          pax: pax,
+          customerName: customerName,
+          customerContact: customerContact);
+      CommonUtils.log("Creating $reservation");
+      DocumentReference ref = await _db
+          .collection('reservations')
+          .withConverter<ReservationModel>(
+              fromFirestore: ReservationModel.fromFirestore,
+              toFirestore: (ReservationModel reservationModel, options) =>
+                  reservationModel.toFirestore())
+          .add(reservation);
+      DocumentSnapshot snapshot = await ref.get();
+      if (snapshot.exists) {
+        return snapshot.data() as ReservationModel;
       }
-      scrollController.animateTo(
-        restoInfoHeight + (116 * totalItems) + (50 * index),
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.ease,
-      );
+    } catch (e) {
+      CommonUtils.log("Error occurred ${e.toString()}");
+      return null;
+    }
+    return null;
+  }
 
-      selectedCategoryIndex = index;
-      notifyListeners();
+  Future<void> updateStatus(RestaurantModel restaurant,ReservationModel reservation, String status) async {
+    try {
+      CommonUtils.log(
+          "Updating status to [$status] of reservation ${reservation.id}");
+      await _db
+          .collection('reservations')
+          .doc(reservation.id)
+          .update({'status': status}).then((_) {
+            CommonUtils.log("Updated... ");
+            loadReservations(restaurant);
+      });
+    } catch (e) {
+      CommonUtils.log("Error occurred ${e.toString()}");
     }
   }
 
-  updateCategoryIndexOnScroll(double offset) {
-    for (var i = 0; i < allCategoryMenus.length; i++) {
-      if (i == 0) {
-        if ((offset < breackPoints.first) & (selectedCategoryIndex != 0)) {
-          selectedCategoryIndex = 0;
-          notifyListeners();
-        }
-      } else {
-        if ((breackPoints[i - 1] <= offset) & (offset < breackPoints[i])) {
-          if (selectedCategoryIndex != i) {
-            selectedCategoryIndex = i;
-            notifyListeners();
-          }
-        }
-      }
+  DocumentSnapshot? lastDocumentFuture; // For pagination
+  DocumentSnapshot? lastDocumentPast; // For pagination
+
+  // Initial fetch method
+  Future<void> loadReservations(RestaurantModel restaurant) async {
+    _restaurantRef = restaurant.restaurantRef!;
+
+    // Fetch future reservations
+    var futureQuery = _db
+        .collection('reservations')
+        .where("restaurantRef", isEqualTo: restaurant.restaurantRef)
+        .where('start', isGreaterThan: Timestamp.fromDate(DateTime.now()))
+        .orderBy('start', descending: false)
+        .limit(10)
+        .withConverter<ReservationModel>(
+            fromFirestore: ReservationModel.fromFirestore,
+            toFirestore: (ReservationModel reservationModel, options) =>
+                reservationModel.toFirestore());
+
+    var futureSnapshot = await futureQuery.get();
+    CommonUtils.log("Reservations loaded : ${futureSnapshot.docs.length}");
+    futureReservations = futureSnapshot.docs.map((e) => e.data()).toList();
+
+    // Fetch past reservations
+    var pastQuery = _db
+        .collection('reservations')
+        .where("restaurantRef", isEqualTo: restaurant.restaurantRef)
+        .where('start', isLessThan: Timestamp.fromDate(DateTime.now()))
+        .orderBy('start', descending: true)
+        .limit(10)
+        .withConverter<ReservationModel>(
+            fromFirestore: ReservationModel.fromFirestore,
+            toFirestore: (ReservationModel reservationModel, options) =>
+                reservationModel.toFirestore());
+
+    var pastSnapshot = await pastQuery.get();
+    pastReservations = pastSnapshot.docs.map((e) => e.data()).toList();
+
+    if (futureSnapshot.docs.isNotEmpty) {
+      lastDocumentFuture = futureSnapshot.docs.last;
     }
+    if (pastSnapshot.docs.isNotEmpty) {
+      lastDocumentPast = pastSnapshot.docs.last;
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+  // Pagination fetch method
+  Future<void> fetchMoreFutureReservations() async {
+    if (isLoading || lastDocumentFuture == null) return;
+
+    isLoading = true;
+    notifyListeners();
+
+    // Example for future reservations pagination
+    var futureQuery = _db
+        .collection('reservations')
+        .where("restaurantRef", isEqualTo: _restaurantRef)
+        .where('start', isGreaterThan: Timestamp.fromDate(DateTime.now()))
+        .orderBy('start', descending: false)
+        .startAfterDocument(lastDocumentFuture!)
+        .limit(10)
+        .withConverter<ReservationModel>(
+            fromFirestore: ReservationModel.fromFirestore,
+            toFirestore: (ReservationModel reservationModel, options) =>
+                reservationModel.toFirestore());
+
+    var futureSnapshot = await futureQuery.get();
+    var newReservations = futureSnapshot.docs.map((e) => e.data()).toList();
+    futureReservations.addAll(newReservations);
+
+    if (futureSnapshot.docs.isNotEmpty) {
+      lastDocumentFuture = futureSnapshot.docs.last;
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> fetchMorePastReservations() async {
+    if (isLoading || lastDocumentPast == null) return;
+
+    CommonUtils.log("Loading more future ones");
+
+    isLoading = true;
+    notifyListeners();
+
+    // Example for past reservations pagination
+    var futureQuery = _db
+        .collection('reservations')
+        .where("restaurantRef", isEqualTo: _restaurantRef)
+        .where('start', isLessThan: Timestamp.fromDate(DateTime.now()))
+        .orderBy('start', descending: true)
+        .startAfterDocument(lastDocumentPast!)
+        .limit(10)
+        .withConverter<ReservationModel>(
+            fromFirestore: ReservationModel.fromFirestore,
+            toFirestore: (ReservationModel reservationModel, options) =>
+                reservationModel.toFirestore());
+
+    var snapshot = await futureQuery.get();
+    var newReservations = snapshot.docs.map((e) => e.data()).toList();
+    pastReservations.addAll(newReservations);
+
+    if (snapshot.docs.isNotEmpty) {
+      lastDocumentPast = snapshot.docs.last;
+    }
+
+    isLoading = false;
+    notifyListeners();
   }
 }

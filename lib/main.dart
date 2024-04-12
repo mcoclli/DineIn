@@ -5,10 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:reservation/core/constants/app_string.dart';
 import 'package:reservation/core/util/common_utils.dart';
-import 'package:reservation/feature/favorite_page/view/favorite_view.dart';
-import 'package:reservation/feature/notification_page/view/notification_view.dart';
+import 'package:reservation/feature/home_page/view/home_view.dart';
 import 'package:reservation/feature/profile_page/view/profile_view.dart';
-import 'package:reservation/feature/reservation_page/view/reservation_view.dart';
+import 'package:reservation/feature/reservation_page/view/all_reservation_requests.dart';
 import 'package:reservation/feature/splash_page/view/splash_view.dart';
 import 'package:reservation/firebase_options.dart';
 import 'package:reservation/products/global/global.dart';
@@ -48,9 +47,8 @@ class MainApp extends StatelessWidget {
         routes: {
           "/": (context) => const SplashPage(),
           "/profilePage": (context) => const ProfilePage(),
-          "/notificationPage": (context) => const NotificationPage(),
-          "/favoritePage": (context) => const FavoritePage(),
-          "/shopPage": (context) => const ReservationsPage()
+          "/home": (context) => const HomePage(),
+          "/reservationRequestsPage": (context) => const AllReservationRequests()
         },
         onGenerateRoute: onGenerateRoute,
         navigatorKey: navigatorKey,

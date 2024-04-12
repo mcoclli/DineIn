@@ -22,8 +22,8 @@ class StringConstant {
 // Home
   static const homeText = "Delicious\nfood for you";
   static const addresText = '1058 Lake Forest Drive,NY';
-  static const likeEat = 'What would you like to eat?';
-  static const enter = 'Enter dish Name';
+  static const likeEat = 'Where would you like to eat?';
+  static const enter = 'Enter Restaurant Name';
   static const all = 'All';
   static const seafood = 'Seafood';
   static const salad = 'Salad';
@@ -33,7 +33,7 @@ class StringConstant {
   static const lunch = 'Lunch Box';
   static const banga = 'Hello Bangla';
   static const favrestaurat = 'Your favorite restaurants';
-  static const open = '264 Open Restaurants';
+  static const open = 'Open Restaurants';
   static const delvery = 'Delvery';
   static const awesome = 'Awesome';
   static const restoHouse = 'Resto House';
@@ -79,6 +79,7 @@ class StringConstant {
   //Reservation Page
   static const reservaName = "Reservation";
   static const menuName = "Menu";
+  static const tableName = "Table";
   static const reviewsName = "Reviews";
   static const oysterDish = "Oyster Dish";
   static const oysterOn = "Oyster Dish";
@@ -96,6 +97,7 @@ class StringConstant {
   static const turk = 'Turkish';
   static const adres = '523 Mapie Ave W, Vienna, VA 22180';
   static const close = 'Close';
+  static const select = 'Select';
   static const book = 'Booked';
   static const timestoday = '68 times today';
   static const chinese = "Chinese";

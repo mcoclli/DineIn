@@ -1,18 +1,20 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:reservation/core/constants/app_colors.dart';
-import 'package:reservation/core/constants/app_string.dart';
 import 'package:reservation/core/constants/image_const.dart';
 import 'package:reservation/core/extensions/extension.dart';
+import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
 
-class RestaruantAppBar extends StatelessWidget {
-  const RestaruantAppBar({
-    super.key,
+class RestaurantAppBar extends StatelessWidget {
+  final RestaurantModel restaurant;
+  const RestaurantAppBar({
+    super.key, required this.restaurant,
   });
 
   @override
   Widget build(BuildContext context) {
     List<Widget> list = [
+      CloudImage(name: restaurant.baseImageUrl, type: "restaurant-banner"),
       const PngImage(name: ImageItems.resto4),
       const PngImage(name: ImageItems.resto1),
     ];
@@ -25,29 +27,22 @@ class RestaruantAppBar extends StatelessWidget {
         background: _stackWidget(list, context),
       ),
       leading: Padding(
-        padding: context.paddingNormalLeft,
+        padding: const EdgeInsets.all(8.0),
         child: CircleAvatar(
           backgroundColor: AppColors.white,
           child: IconButton(
             icon: const Icon(Icons.arrow_back_ios_rounded),
-            onPressed: () {},
+            onPressed: () => Navigator.pop(context),
           ),
         ),
       ),
       actions: [
-        CircleAvatar(
-          backgroundColor: AppColors.white,
-          child: IconButton(
-            icon: const Icon(Icons.bookmark_outline),
-            onPressed: () {},
-          ),
-        ),
         Padding(
-          padding: context.paddingLowHorizontal,
+          padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
             backgroundColor: AppColors.white,
             child: IconButton(
-              icon: const Icon(Icons.share),
+              icon: const Icon(Icons.favorite),
               onPressed: () {},
             ),
           ),
@@ -70,24 +65,6 @@ class RestaruantAppBar extends StatelessWidget {
                   width: MediaQuery.of(context).size.width,
                   child: item))
               .toList(),
-        ),
-        Padding(
-          padding: context.pagePaddingTop,
-          child: Center(
-            child: Container(
-              height: context.dynamicHeight(0.04),
-              width: context.dynamicWidth(0.40),
-              decoration: context.middelDecoraiton,
-              child: Center(
-                child: Text(
-                  StringConstant.seeAll,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                      ),
-                ),
-              ),
-            ),
-          ),
         ),
       ],
     );

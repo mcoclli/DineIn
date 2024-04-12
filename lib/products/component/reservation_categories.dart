@@ -6,6 +6,7 @@ import 'package:reservation/feature/reservation_page/model/reservation_model.dar
 class RestaurantCategories extends SliverPersistentHeaderDelegate {
   final ValueChanged<int> onChanged;
   final int selectedIndex;
+
   RestaurantCategories({
     required this.onChanged,
     required this.selectedIndex,
@@ -35,6 +36,7 @@ class RestaurantCategories extends SliverPersistentHeaderDelegate {
 class Categories extends StatefulWidget {
   final ValueChanged<int> onChanged;
   final int selectedIndex;
+
   const Categories(
       {super.key, required this.onChanged, required this.selectedIndex});
 
@@ -85,7 +87,7 @@ class _CategoriesState extends State<Categories> {
                           ? AppColors.poppypower
                           : AppColors.chanceofrain),
                   child: Text(
-                    allCategoryMenus[index].category,
+                    allCategoryMenus[index],
                     style: const TextStyle(fontSize: 20),
                   ),
                 ),

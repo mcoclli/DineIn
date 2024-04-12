@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-
 import 'package:reservation/core/constants/app_colors.dart';
-import 'package:reservation/core/constants/app_string.dart';
 import 'package:reservation/core/extensions/extension.dart';
+import 'package:reservation/feature/profile_page/model/restaurant_model.dart';
 
 class RestaurantInfo extends StatelessWidget {
+  final RestaurantModel restaurant;
+
   const RestaurantInfo({
     super.key,
+    required this.restaurant,
   });
 
   @override
@@ -17,37 +19,11 @@ class RestaurantInfo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            StringConstant.istanbul,
+            restaurant.name ?? "Restaurant",
             style: Theme.of(context)
                 .textTheme
                 .headlineMedium
                 ?.copyWith(color: AppColors.blueMetallic),
-          ),
-          Row(
-            children: [
-              for (int i = 0; i < 5; i++)
-                Icon(Icons.star,
-                    size: 20,
-                    color:
-                        i == 4 ? AppColors.silverlined : AppColors.california),
-              SizedBox(
-                width: context.dynamicWidth(0.03),
-              ),
-              const Icon(Icons.mode_comment_outlined),
-              SizedBox(
-                width: context.dynamicWidth(0.03),
-              ),
-              Text(
-                StringConstant.reviews3,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.silverlined,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              SizedBox(
-                width: context.dynamicWidth(0.03),
-              ),
-            ],
           ),
           SizedBox(
             height: context.dynamicHeight(0.01),
@@ -59,7 +35,7 @@ class RestaurantInfo extends StatelessWidget {
                 width: context.dynamicWidth(0.03),
               ),
               Text(
-                StringConstant.under,
+                restaurant.meanCost ?? "mean cost",
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppColors.silverlined,
                       fontWeight: FontWeight.bold,
@@ -73,7 +49,7 @@ class RestaurantInfo extends StatelessWidget {
                 width: context.dynamicWidth(0.03),
               ),
               Text(
-                StringConstant.turk,
+                restaurant.cuisine ?? "cuisine",
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppColors.silverlined,
                       fontWeight: FontWeight.bold,
@@ -91,7 +67,7 @@ class RestaurantInfo extends StatelessWidget {
                 width: context.dynamicWidth(0.03),
               ),
               Text(
-                StringConstant.adres,
+                restaurant.address ?? "location",
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppColors.silverlined,
                       fontWeight: FontWeight.bold,

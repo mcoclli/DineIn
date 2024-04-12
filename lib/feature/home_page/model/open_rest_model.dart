@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:reservation/core/constants/app_colors.dart';
 import 'package:reservation/core/constants/app_string.dart';
 import 'package:reservation/core/constants/image_const.dart';
-
+@Deprecated("remove")
 class OpenRestModel {
   final Widget imagePath;
 

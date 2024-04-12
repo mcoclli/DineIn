@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:reservation/core/constants/app_colors.dart';
 import 'package:reservation/core/constants/app_string.dart';
 import 'package:reservation/core/util/common_utils.dart';
+import 'package:reservation/feature/profile_page/view/profile_view.dart';
 import 'package:reservation/products/mixin/validation.dart';
 
 class DrawModel {
@@ -28,7 +29,10 @@ class DrawItems {
           color: AppColors.russet,
         ),
         title: StringConstant.myHome,
-        onClicked: () => {},
+        onClicked: () => {
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const ProfilePage()))
+        },
       ),
       DrawModel(
         icon: const Icon(
@@ -36,30 +40,6 @@ class DrawItems {
           color: AppColors.russet,
         ),
         title: StringConstant.yourOrder,
-        onClicked: () => {},
-      ),
-      DrawModel(
-        icon: const Icon(
-          Icons.settings_outlined,
-          color: AppColors.russet,
-        ),
-        title: StringConstant.setting,
-        onClicked: () => {},
-      ),
-      DrawModel(
-        icon: const Icon(
-          Icons.help_outline,
-          color: AppColors.russet,
-        ),
-        title: StringConstant.whish,
-        onClicked: () => {},
-      ),
-      DrawModel(
-        icon: const Icon(
-          Icons.alarm,
-          color: AppColors.russet,
-        ),
-        title: StringConstant.menu,
         onClicked: () => {},
       ),
       DrawModel(

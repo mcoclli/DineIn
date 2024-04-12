@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:reservation/core/constants/app_colors.dart';
-import 'package:reservation/feature/home_page/view/home_view.dart';
 import 'package:reservation/core/extensions/extension.dart';
 
 class BottomNavbar extends StatefulWidget {
@@ -28,24 +27,24 @@ class _BottomNavbarState extends State<BottomNavbar> {
             pageName: "profilePage",
             id: 0,
           ),
-          item(
-            icon: 'shop',
-            pageName: "shopPage",
-            id: 1,
-          ),
-          item(
-            icon: 'home',
-            pageName: "homePage",
-            id: 2,
-          ),
-          item(
-            icon: 'favorite',
-            pageName: "favoritePage",
-            id: 3,
-          ),
+          // item(
+          //   icon: 'shop',
+          //   pageName: "shopPage",
+          //   id: 1,
+          // ),
+          // item(
+          //   icon: 'home',
+          //   pageName: "homePage",
+          //   id: 2,
+          // ),
+          // item(
+          //   icon: 'favorite',
+          //   pageName: "favoritePage",
+          //   id: 3,
+          // ),
           item(
             icon: 'notification',
-            pageName: "notificationPage",
+            pageName: "reservationRequestsPage",
             id: 4,
           ),
         ],
@@ -60,14 +59,8 @@ class _BottomNavbarState extends State<BottomNavbar> {
   }) {
     return InkWell(
       onTap: () {
-        id != 2
-            ? Navigator.pushNamedAndRemoveUntil(
-                context, "/$pageName", (route) => false)
-            : Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HomePage(),
-                ));
+        Navigator.pushNamedAndRemoveUntil(
+            context, "/$pageName", (route) => false);
       },
       child: SvgPicture.asset(
         'assets/icons/bottom_navbar/$icon.svg',

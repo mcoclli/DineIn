@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:reservation/core/constants/app_colors.dart';
 import 'package:reservation/core/extensions/extension.dart';
+import 'package:reservation/feature/reservation_page/model/reservation_model.dart';
 
 class ReservationCard extends StatelessWidget {
   const ReservationCard({
     super.key,
-    required this.image,
-    required this.name,
-    required this.title,
-    required this.price,
+    required this.reservationModel,
   });
 
-  final String image, title, name;
-  final double price;
+  final ReservationModel reservationModel;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +22,7 @@ class ReservationCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  reservationModel.restaurantRef,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: AppColors.black,
                         fontWeight: FontWeight.w600,
@@ -34,7 +31,7 @@ class ReservationCard extends StatelessWidget {
                 Padding(
                   padding: context.paddingLowVertical,
                   child: Text(
-                    name,
+                    "${reservationModel.start}",
                     maxLines: 5,
                     overflow: TextOverflow.ellipsis,
                   ),
